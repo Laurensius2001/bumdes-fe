@@ -4,6 +4,12 @@ export const pelangganService = {
   getAll: async () => {
     return await apiFetch('/pelanggan', { withAuth: true });
   },
+  getMe: async () => {
+    return await apiFetch('/pelanggan/me', { withAuth: true });
+  },
+  getById: async (id: number | string) => {
+    return await apiFetch(`/pelanggan/${id}`, { withAuth: true });
+  },
   create: async (payload: {
     username: string;
     nama: string;

@@ -3,30 +3,25 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CircularProgress, Stack } from '@mui/material';
+import { useAuth } from '@/context/AuthContext';
 
 export default function RootPage() {
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('bumdes_logged_in') === 'true';
-
-    if (!isLoggedIn) {
-      router.push('/login');
-      return;
-    }
-
-    const storedUser = localStorage.getItem('bumdes_user');
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-      if (user.role === 'pelanggan') {
+    if (!isLoading) {
+      if (!isAuthenticated || !user) {
+        router.push('/login');
+      } else if (user.role === 'pelanggan') {
         router.push('/pelanggan/dashboard');
-      } else {
+      } else if (user.role === 'admin') {
         router.push('/admin/dashboard');
+      } else {
+        router.push('/login');
       }
-    } else {
-      router.push('/admin/dashboard');
     }
-  }, [router]);
+  }, [isLoading, isAuthenticated, user, router]);
 
   return (
     <Stack height="100vh" alignItems="center" justifyContent="center">
@@ -34,3 +29,4 @@ export default function RootPage() {
     </Stack>
   );
 }
+

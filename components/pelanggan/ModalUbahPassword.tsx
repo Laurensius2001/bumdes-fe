@@ -7,7 +7,6 @@ import {
   CircularProgress,
   Dialog,
   DialogContent,
-  DialogTitle,
   Divider,
   Stack,
   Typography,
@@ -63,6 +62,7 @@ const ModalUbahPassword = ({ open, onSuccess }: ModalUbahPasswordProps): ReactEl
         const storedUser = localStorage.getItem('bumdes_user');
         if (storedUser) {
           const user = JSON.parse(storedUser);
+          user.isPasswordChanged = true;
           user.is_password_changed = true;
           localStorage.setItem('bumdes_user', JSON.stringify(user));
         }
@@ -89,7 +89,6 @@ const ModalUbahPassword = ({ open, onSuccess }: ModalUbahPasswordProps): ReactEl
       open={open}
       disableEscapeKeyDown
       onClose={(_, reason) => {
-        // Tidak bisa ditutup dengan klik backdrop
         if (reason === 'backdropClick') return;
       }}
       maxWidth="sm"
@@ -101,10 +100,10 @@ const ModalUbahPassword = ({ open, onSuccess }: ModalUbahPasswordProps): ReactEl
         },
       }}
     >
-      {/* Header dengan accent color */}
+      {/* Header dengan tema Emerald Green */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #695cfe 0%, #4f46e5 100%)',
+          background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
           px: 3,
           py: 2.5,
         }}
@@ -127,7 +126,7 @@ const ModalUbahPassword = ({ open, onSuccess }: ModalUbahPasswordProps): ReactEl
             <Typography variant="h6" fontWeight={700} color="#fff">
               Ubah Password
             </Typography>
-            <Typography variant="caption" color="rgba(255,255,255,0.8)">
+            <Typography variant="caption" color="rgba(255,255,255,0.85)">
               Wajib dilakukan sebelum menggunakan sistem
             </Typography>
           </Box>
@@ -138,19 +137,19 @@ const ModalUbahPassword = ({ open, onSuccess }: ModalUbahPasswordProps): ReactEl
         {/* Info banner */}
         <Box
           sx={{
-            bgcolor: '#fff8e1',
-            border: '1px solid #ffe082',
+            bgcolor: '#ecfdf5',
+            border: '1px solid #a7f3d0',
             borderRadius: 2,
             px: 2,
             py: 1.5,
             mb: 3,
             display: 'flex',
             alignItems: 'flex-start',
-            gap: 1,
+            gap: 1.25,
           }}
         >
-          <IconifyIcon icon="solar:info-circle-bold" width={20} color="#f59e0b" sx={{ mt: 0.2 }} />
-          <Typography variant="body2" color="#92400e">
+          <IconifyIcon icon="solar:info-circle-bold" width={20} color="#059669" sx={{ mt: 0.2 }} />
+          <Typography variant="body2" color="#047857" fontWeight={500}>
             Ini adalah login pertama Anda. Demi keamanan akun, Anda diwajibkan mengganti password
             sebelum dapat menggunakan sistem.
           </Typography>
@@ -160,7 +159,7 @@ const ModalUbahPassword = ({ open, onSuccess }: ModalUbahPasswordProps): ReactEl
           <Stack gap={2.5}>
             {/* Password Lama */}
             <div className="flex w-full flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-gray-700" htmlFor="old-password">
+              <label className="text-[13px] font-semibold text-slate-700" htmlFor="old-password">
                 Password Lama
               </label>
               <div className="relative w-full">
@@ -171,13 +170,13 @@ const ModalUbahPassword = ({ open, onSuccess }: ModalUbahPasswordProps): ReactEl
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
                   disabled={isLoading}
-                  className="w-full rounded-lg border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-[13px] text-gray-900 outline-none transition-colors placeholder:text-gray-400 hover:border-gray-300 focus:border-[#6b42ff] focus:bg-white disabled:opacity-50"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-[13px] text-slate-900 outline-none transition-all placeholder:text-slate-400 hover:border-slate-300 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowOld(!showOld)}
                   disabled={isLoading}
-                  className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center text-gray-400 transition-colors hover:text-gray-600 disabled:opacity-50"
+                  className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center text-slate-400 transition-colors hover:text-slate-600 disabled:opacity-50"
                 >
                   <IconifyIcon icon={showOld ? 'ic:baseline-key-off' : 'ic:baseline-key'} className="text-[18px]" />
                 </button>
@@ -188,7 +187,7 @@ const ModalUbahPassword = ({ open, onSuccess }: ModalUbahPasswordProps): ReactEl
 
             {/* Password Baru */}
             <div className="flex w-full flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-gray-700" htmlFor="new-password">
+              <label className="text-[13px] font-semibold text-slate-700" htmlFor="new-password">
                 Password Baru
               </label>
               <div className="relative w-full">
@@ -199,13 +198,13 @@ const ModalUbahPassword = ({ open, onSuccess }: ModalUbahPasswordProps): ReactEl
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   disabled={isLoading}
-                  className="w-full rounded-lg border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-[13px] text-gray-900 outline-none transition-colors placeholder:text-gray-400 hover:border-gray-300 focus:border-[#6b42ff] focus:bg-white disabled:opacity-50"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-[13px] text-slate-900 outline-none transition-all placeholder:text-slate-400 hover:border-slate-300 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNew(!showNew)}
                   disabled={isLoading}
-                  className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center text-gray-400 transition-colors hover:text-gray-600 disabled:opacity-50"
+                  className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center text-slate-400 transition-colors hover:text-slate-600 disabled:opacity-50"
                 >
                   <IconifyIcon icon={showNew ? 'ic:baseline-key-off' : 'ic:baseline-key'} className="text-[18px]" />
                 </button>
@@ -214,7 +213,7 @@ const ModalUbahPassword = ({ open, onSuccess }: ModalUbahPasswordProps): ReactEl
 
             {/* Konfirmasi Password Baru */}
             <div className="flex w-full flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-gray-700" htmlFor="confirm-password">
+              <label className="text-[13px] font-semibold text-slate-700" htmlFor="confirm-password">
                 Konfirmasi Password Baru
               </label>
               <div className="relative w-full">
@@ -225,13 +224,13 @@ const ModalUbahPassword = ({ open, onSuccess }: ModalUbahPasswordProps): ReactEl
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={isLoading}
-                  className="w-full rounded-lg border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-[13px] text-gray-900 outline-none transition-colors placeholder:text-gray-400 hover:border-gray-300 focus:border-[#6b42ff] focus:bg-white disabled:opacity-50"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-[13px] text-slate-900 outline-none transition-all placeholder:text-slate-400 hover:border-slate-300 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
                   disabled={isLoading}
-                  className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center text-gray-400 transition-colors hover:text-gray-600 disabled:opacity-50"
+                  className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-center text-slate-400 transition-colors hover:text-slate-600 disabled:opacity-50"
                 >
                   <IconifyIcon icon={showConfirm ? 'ic:baseline-key-off' : 'ic:baseline-key'} className="text-[18px]" />
                 </button>
@@ -246,12 +245,15 @@ const ModalUbahPassword = ({ open, onSuccess }: ModalUbahPasswordProps): ReactEl
               sx={{
                 mt: 1,
                 py: 1.5,
-                background: 'linear-gradient(135deg, #695cfe 0%, #4f46e5 100%)',
-                borderRadius: 2,
+                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                borderRadius: 2.5,
                 fontWeight: 700,
-                fontSize: '15px',
+                fontSize: '14px',
+                textTransform: 'none',
+                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.25)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #5a4fe0 0%, #3d35c8 100%)',
+                  background: 'linear-gradient(135deg, #047857 0%, #065f46 100%)',
+                  boxShadow: '0 6px 18px rgba(5, 150, 105, 0.35)',
                 },
               }}
             >

@@ -4,6 +4,9 @@ export const paketService = {
   getAll: async () => {
     return await apiFetch('/paket-internet', { withAuth: true });
   },
+  getById: async (id: number | string) => {
+    return await apiFetch(`/paket-internet/${id}`, { withAuth: true });
+  },
   create: async (payload: Record<string, any>) => {
     return await apiFetch('/paket-internet', {
       method: 'POST',

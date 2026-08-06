@@ -8,7 +8,7 @@ import Sidebar from './Sidebar';
 import Topbar from '@/components/admin/layout/Topbar';
 import Footer from '@/components/admin/layout/Footer';
 
-export const drawerWidth = 278;
+export const drawerWidth = 288;
 
 const MainLayout = ({ children }: PropsWithChildren): ReactElement | null => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -43,11 +43,11 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement | null => {
 
   if (!isMounted) return null;
 
-  const currentSidebarWidth = isCollapsed ? 78 : 300;
+  const currentSidebarWidth = isCollapsed ? 75 : 288;
 
   return (
     <>
-      <Stack direction="row" minHeight="100vh" bgcolor="#f5f7fa">
+      <Stack direction="row" minHeight="100vh" bgcolor="#f8fafc">
         <Topbar handleDrawerToggle={handleDrawerToggle} isCollapsed={isCollapsed} />
         <Box
           component="nav"
@@ -71,7 +71,7 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement | null => {
               '& .MuiDrawer-paper': {
                 boxSizing: 'border-box',
                 border: 0,
-                backgroundColor: '#11101d',
+                backgroundColor: '#020617',
               },
             }}
           >
@@ -85,7 +85,7 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement | null => {
                 boxSizing: 'border-box',
                 width: currentSidebarWidth,
                 border: 0,
-                backgroundColor: '#11101d',
+                backgroundColor: '#020617',
                 transition: 'width 0.3s ease',
                 overflow: 'visible',
               },
@@ -99,18 +99,20 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement | null => {
           component="main"
           sx={{
             flexGrow: 1,
+            display: 'flex',
+            flexDirection: 'column',
             minHeight: '100vh',
-            bgcolor: '#f8f9fa',
+            bgcolor: '#f8fafc',
             width: { lg: `calc(100% - ${currentSidebarWidth}px)` },
             transition: 'all 0.3s ease',
             position: 'relative',
           }}
         >
           <Toolbar sx={{ height: 80 }} />
-          <Box sx={{ px: 4, pb: 4, pt: 2 }}>
+          <Box sx={{ px: { xs: 2.5, sm: 4, lg: 6 }, pb: 4, pt: 3, flexGrow: 1 }}>
             {children}
-            <Footer />
           </Box>
+          <Footer />
         </Box>
       </Stack>
     </>

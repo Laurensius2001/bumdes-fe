@@ -1,21 +1,43 @@
 'use client';
 
-import { Suspense, useState, useTransition } from 'react';
+import { Suspense, useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from '@/components/Toast';
 import { authService } from '@/services/authService';
 import IconifyIcon from '@/components/common/IconifyIcon';
+import { useAuth } from '@/context/AuthContext';
 
 const LoginPage = () => {
   const router = useRouter();
+  const { user, isAuthenticated, isLoading, login } = useAuth();
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user) {
+      if (user.role === 'pelanggan') {
+        router.push('/pelanggan/dashboard');
+      } else if (user.role === 'admin') {
+        router.push('/admin/dashboard');
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const handleClickShowPassword = () => setShowPassword(!showPassword);
+
+  const handleAutoFillDemo = () => {
+    setEmail('admin@sodong.desa.id');
+    setPassword('adminbts2026');
+    toast.info('Akun demo terisi!', 'Auto Fill');
+  };
+
+  const handleForgotPassword = () => {
+    toast.info('Silakan hubungi Kepala BUMDes untuk reset password', 'Lupa Password');
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,21 +51,14 @@ const LoginPage = () => {
       const response = await authService.login({ username: email, password });
       const { ok, data } = response;
 
-      if (ok && data?.success) {
-        localStorage.setItem('bumdes_logged_in', 'true');
-        localStorage.setItem('bumdes_token', data.data.token);
-        localStorage.setItem('bumdes_user', JSON.stringify(data.data.user));
-        document.cookie = 'bumdes_logged_in=true; path=/; max-age=86400';
-
+      if (ok && data?.success && data?.data?.token && data?.data?.user) {
         toast.success('Login berhasil! Mengarahkan ke dashboard...', 'Selamat Datang');
 
-        const role = data.data.user?.role;
         startTransition(() => {
-          if (role === 'pelanggan') {
-            router.push('/pelanggan/dashboard');
-          } else {
-            router.push('/admin/dashboard');
-          }
+          login({
+            token: data.data.token,
+            user: data.data.user,
+          });
         });
       } else {
         toast.error(data?.message || 'Username atau password salah.', 'Login Gagal');
@@ -55,167 +70,238 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col md:flex-row bg-[#0e111a] font-sans text-white">
-      {/* Left Section */}
-      <div className="relative flex w-full flex-col justify-between p-8 md:w-1/2 lg:p-16 overflow-hidden bg-[#16122d]">
-        {/* Background Grid Pattern */}
-        <div 
-          className="absolute inset-0 opacity-20 pointer-events-none"
-          style={{
-            backgroundImage: `linear-gradient(#2d2948 1px, transparent 1px), linear-gradient(90deg, #2d2948 1px, transparent 1px)`,
-            backgroundSize: '30px 30px'
-          }}
-        ></div>
-        {/* Background Gradients */}
-        <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-[#46237a] opacity-30 blur-[100px] pointer-events-none"></div>
-        <div className="absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-[#008f8f] opacity-20 blur-[100px] pointer-events-none"></div>
+    <div className="h-full min-h-screen bg-slate-950 text-slate-100 antialiased flex flex-col justify-between relative overflow-x-hidden selection:bg-emerald-500 selection:text-white font-sans">
 
-        <div className="relative z-10 flex flex-col items-start">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#6b42ff] to-[#8a42ff] shadow-[0_0_20px_rgba(107,66,255,0.4)]">
-              <IconifyIcon icon="lucide:wifi" className="text-white text-xl" />
+      {/* Background Grid Pattern & Glow Effects */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0 opacity-40"
+        style={{
+          backgroundImage: 'radial-gradient(rgba(16, 185, 129, 0.15) 1px, transparent 1px)',
+          backgroundSize: '28px 28px'
+        }}
+      />
+      <div className="fixed top-0 -left-20 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none z-0"></div>
+      <div className="fixed bottom-0 right-0 w-96 h-96 bg-teal-600/10 rounded-full blur-3xl pointer-events-none z-0"></div>
+
+      {/* MAIN CONTAINER */}
+      <div className="relative z-10 flex-1 flex flex-col lg:flex-row min-h-screen">
+
+        {/* LEFT BRANDING & HERO SECTION WITH WIFI GRAPHICS */}
+        <div className="lg:w-7/12 p-8 lg:p-16 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/80 backdrop-blur-md relative overflow-hidden">
+
+          {/* BACKGROUND WIFI GRAPHIC / NETWORK VECTOR ILLUSTRATION */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-20">
+            {/* Glowing Wi-Fi Waves Overlay */}
+            <svg className="absolute -right-16 top-1/2 -translate-y-1/2 w-[550px] h-[550px] text-emerald-500/40" viewBox="0 0 500 500" fill="none">
+              <circle cx="250" cy="250" r="230" stroke="currentColor" strokeWidth="2" strokeDasharray="8 8" className="animate-spin-slow" />
+              <circle cx="250" cy="250" r="180" stroke="currentColor" strokeWidth="1.5" />
+              <circle cx="250" cy="250" r="130" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
+              <circle cx="250" cy="250" r="80" stroke="currentColor" strokeWidth="2" />
+              <circle cx="250" cy="250" r="30" fill="currentColor" />
+              <path d="M 110 250 A 140 140 0 0 1 390 250" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+              <path d="M 60 250 A 190 190 0 0 1 440 250" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+              <path d="M 10 250 A 240 240 0 0 1 490 250" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+            </svg>
+            {/* Network Mesh Nodes */}
+            <svg className="absolute left-10 bottom-10 w-80 h-80 text-teal-400/30" viewBox="0 0 200 200" fill="none">
+              <path d="M20 180 L80 120 L150 150 L180 60 L100 40 L20 180 Z" stroke="currentColor" strokeWidth="1.5" />
+              <circle cx="20" cy="180" r="5" fill="currentColor" />
+              <circle cx="80" cy="120" r="6" fill="currentColor" />
+              <circle cx="150" cy="150" r="5" fill="currentColor" />
+              <circle cx="180" cy="60" r="7" fill="currentColor" />
+              <circle cx="100" cy="40" r="5" fill="currentColor" />
+            </svg>
+          </div>
+
+          {/* Logo Header */}
+          <div className="flex items-center space-x-3.5 relative z-10">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-bold shadow-lg shadow-emerald-900/40 border border-emerald-400/20">
+              <IconifyIcon icon="lucide:wifi" className="text-lg" />
             </div>
-            <div className="flex flex-col justify-center">
-              <span className="text-[16px] font-bold leading-tight tracking-wide text-white">BTS SODONG NET</span>
-              <span className="mt-[2px] rounded bg-[#0c5149] px-1.5 py-[1px] text-[9px] font-bold text-[#66dec8] w-fit tracking-wider">
+            <div>
+              <h1 className="text-base font-bold text-white tracking-wide leading-tight">BTS SODONG NET</h1>
+              <span className="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/30">
                 BUMDES TIRTA SEJAHTERA
               </span>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="mt-20">
-            <div className="mb-6 flex items-center gap-2 rounded-full border border-[#232e3a] bg-[#1a2332]/50 px-3 py-1.5 w-fit">
-              <div className="h-2 w-2 rounded-full bg-[#00e5b0]"></div>
-              <span className="text-xs font-medium text-[#a1a1aa]">Sistem Akses Terpadu Digital Desa v2.0</span>
+          {/* Hero Text & Value Proposition */}
+          <div className="my-12 lg:my-0 max-w-2xl space-y-6 relative z-10">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold tracking-wide backdrop-blur-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>Sistem Akses Terpadu Digital Desa v2.0</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight text-white lg:text-[52px]">
-              Kelola Konektivitas<br />
-              <span className="text-[#66dec8]">Desa Sodong Lebih</span><br />
-              <span className="text-[#66dec8]">Cerdas.</span>
-            </h1>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.15]">
+              Kelola Konektivitas <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-200">
+                Desa Sodong
+              </span>{' '}
+              Lebih Cerdas.
+            </h2>
 
-            <p className="mt-6 max-w-[420px] text-sm md:text-base text-gray-300 leading-relaxed">
-              Portal manajemen resmi unit usaha internet <span className="font-semibold text-[#66dec8]">BUMDes Tirta Sejahtera.</span> Memudahkan monitoring tagihan pelanggan, manajemen alokasi paket wifi, hingga pencetakan struk transaksi secara otomatis.
+            <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
+              Portal manajemen resmi unit usaha internet <strong className="text-white font-semibold">BUMDes Tirta Sejahtera</strong>. Memudahkan monitoring tagihan pelanggan, manajemen alokasi paket wifi, hingga pencetakan struk transaksi secara otomatis.
             </p>
 
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-              <div className="flex flex-col rounded-xl border border-[#2d3748]/60 bg-[#1a202c]/40 p-4 backdrop-blur-sm sm:w-[220px]">
-                <div className="flex items-center gap-2 font-semibold text-[#00e5b0] mb-1.5">
-                  <IconifyIcon icon="lucide:zap" className="text-[18px]" />
-                  <span className="text-[15px]">1 Gbps Feed</span>
+            {/* Feature Badges */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 flex items-start space-x-3.5 shadow-sm hover:border-emerald-500/30 transition-colors backdrop-blur-sm">
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+                  <IconifyIcon icon="lucide:zap" className="text-base" />
                 </div>
-                <span className="text-xs text-gray-400">Monitoring OLT real-time 24/7</span>
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">1 Gbps Feed</h4>
+                  <p className="text-xs text-slate-400 mt-0.5">Monitoring OLT real-time 24/7</p>
+                </div>
               </div>
-              <div className="flex flex-col rounded-xl border border-[#2d3748]/60 bg-[#1a202c]/40 p-4 backdrop-blur-sm sm:w-[220px]">
-                <div className="flex items-center gap-2 font-semibold text-[#9fa8da] mb-1.5">
-                  <IconifyIcon icon="lucide:printer" className="text-[18px]" />
-                  <span className="text-[15px]">POS Thermal</span>
+
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 flex items-start space-x-3.5 shadow-sm hover:border-emerald-500/30 transition-colors backdrop-blur-sm">
+                <div className="p-2.5 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 shrink-0">
+                  <IconifyIcon icon="lucide:printer" className="text-base" />
                 </div>
-                <span className="text-xs text-gray-400">Cetak Struk Pembayaran Instan</span>
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">POS Thermal</h4>
+                  <p className="text-xs text-slate-400 mt-0.5">Cetak Struk Pembayaran Instan</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="relative z-10 mt-12 text-[11px] text-gray-500">
-          &copy; 2026 BUMDes Tirta Sejahtera &bull; Desa Sodong. All rights reserved.
-        </div>
-      </div>
-
-      {/* Right Section */}
-      <div className="flex w-full items-center justify-center p-8 md:w-1/2 bg-[#0e111a]">
-        <div className="w-full max-w-[400px] rounded-2xl border border-[#232838] bg-[#171b29] p-8 shadow-2xl">
-          <div className="mb-6 w-fit rounded-full bg-[#222842] px-3 py-1.5 text-xs font-semibold text-[#a5b4fc]">
-            Portal Login Administrator
-          </div>
-          
-          <h2 className="mb-2 text-2xl font-bold text-white tracking-tight">Selamat Datang Kembali</h2>
-          <p className="mb-8 text-[13px] text-gray-400 leading-relaxed">
-            Masukkan kredensial akun Anda untuk mengelola dashboard BTS Sodong Net.
-          </p>
-
-          <form onSubmit={handleLogin} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="email" className="text-[13px] font-medium text-gray-300">
-                Username atau Email Operator
-              </label>
-              <div className="flex items-center rounded-[10px] border border-[#2d3348] bg-[#0e111a] px-3 py-2.5 transition-colors focus-within:border-[#6b42ff] hover:border-[#3d4560]">
-                <IconifyIcon icon="lucide:user" className="text-gray-500 mr-2.5 text-[18px]" />
-                <input
-                  id="email"
-                  type="text"
-                  placeholder="admin@sodong.desa.id"
-                  className="w-full bg-transparent text-[14px] text-white placeholder-gray-600 outline-none"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (error) setError('');
-                  }}
-                  disabled={isPending}
-                />
-              </div>
+          {/* Left Footer Note */}
+          <div className="text-xs text-slate-400 flex items-center justify-between pt-6 border-t border-slate-800/80 relative z-10">
+            <p>&copy; 2026 BUMDes Tirta Sejahtera &bull; Desa Sodong.</p>
+            <div className="flex items-center space-x-2 text-emerald-400 font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Server Stable</span>
             </div>
+          </div>
 
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-[13px] font-medium text-gray-300">
-                  Kata Sandi / Password
-                </label>
-                <Link href="/forgot-password" className="text-[13px] font-medium text-[#00e5b0] hover:underline">
-                  Lupa Password?
-                </Link>
+        </div>
+
+        {/* RIGHT LOGIN FORM CARD SECTION */}
+        <div className="lg:w-5/12 p-6 sm:p-12 lg:p-16 flex items-center justify-center bg-slate-950/80 backdrop-blur-xl">
+          <div className="w-full max-w-md space-y-6">
+
+            {/* Card Container */}
+            <div className="bg-slate-900/90 p-7 sm:p-8 rounded-3xl border border-slate-800/90 shadow-2xl space-y-6 relative overflow-hidden">
+
+              {/* Header Form */}
+              <div>
+                <span className="px-2.5 py-1 text-[11px] font-semibold tracking-wider uppercase rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  Portal Login Administrator
+                </span>
+                <h3 className="text-2xl font-bold text-white tracking-tight mt-3">Selamat Datang Kembali</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Masukkan kredensial akun Anda untuk mengelola dashboard BTS Sodong Net.
+                </p>
               </div>
-              <div className="flex items-center rounded-[10px] border border-[#2d3348] bg-[#0e111a] px-3 py-2.5 transition-colors focus-within:border-[#6b42ff] hover:border-[#3d4560]">
-                <IconifyIcon icon="lucide:lock" className="text-gray-500 mr-2.5 text-[18px]" />
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
-                  className="w-full bg-transparent text-[14px] tracking-widest text-white placeholder-gray-600 outline-none"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (error) setError('');
-                  }}
-                  disabled={isPending}
-                />
+
+              {/* Form Inputs */}
+              <form onSubmit={handleLogin} className="space-y-4">
+
+                {/* Username / Email Field */}
+                <div>
+                  <label htmlFor="email" className="block text-xs font-semibold text-slate-300 mb-1.5">
+                    Username atau Email Operator
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                      <IconifyIcon icon="lucide:user" className="text-sm" />
+                    </span>
+                    <input
+                      id="email"
+                      type="text"
+                      required
+                      placeholder="admin@sodong.desa.id"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={isPending}
+                      className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm bg-slate-950/80 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Password Field */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label htmlFor="password" className="block text-xs font-semibold text-slate-300">
+                      Kata Sandi / Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+                    >
+                      Lupa Password?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                      <IconifyIcon icon="lucide:lock" className="text-sm" />
+                    </span>
+                    <input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Masukkan kata sandi"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={isPending}
+                      className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm bg-slate-950/80 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleClickShowPassword}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
+                      disabled={isPending}
+                    >
+                      <IconifyIcon icon={showPassword ? "lucide:eye-off" : "lucide:eye"} className="text-sm" />
+                    </button>
+                  </div>
+                </div>
+
+
+
+                {/* Submit Button */}
                 <button
-                  type="button"
-                  onClick={handleClickShowPassword}
-                  className="ml-2 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
+                  type="submit"
                   disabled={isPending}
+                  className="w-full py-3 px-4 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center space-x-2 disabled:opacity-70"
                 >
-                  <IconifyIcon icon={showPassword ? "lucide:eye-off" : "lucide:eye"} className="text-[18px]" />
+                  {isPending ? (
+                    <>
+                      <span>Memverifikasi Kredensial...</span>
+                      <IconifyIcon icon="lucide:loader-2" className="animate-spin text-xs" />
+                    </>
+                  ) : (
+                    <>
+                      <span>Masuk Ke Panel System</span>
+                      <IconifyIcon icon="lucide:arrow-right" className="text-xs" />
+                    </>
+                  )}
                 </button>
-              </div>
+
+              </form>
+
             </div>
 
-            <button
-              type="submit"
-              disabled={isPending}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-[10px] bg-gradient-to-r from-[#6340ff] to-[#8b5cf6] py-3 text-[14px] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-70 shadow-[0_4px_14px_rgba(99,64,255,0.4)]"
-            >
-              {isPending ? (
-                <>
-                  <IconifyIcon icon="lucide:loader-2" className="animate-spin text-[18px]" />
-                  <span>Memproses...</span>
-                </>
-              ) : (
-                <>
-                  <span>Masuk Ke Panel System</span>
-                  <IconifyIcon icon="lucide:arrow-right" className="text-[18px]" />
-                </>
-              )}
-            </button>
-          </form>
+            {/* Footer Quick Info */}
+            <div className="text-center text-xs text-slate-500">
+              <p>BTS SODONG NET &bull; Membangun Internet Desa Berdaya</p>
+            </div>
+
+          </div>
         </div>
+
       </div>
+
     </div>
   );
 };
 
 export default LoginPage;
-

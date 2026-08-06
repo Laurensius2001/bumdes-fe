@@ -2,63 +2,64 @@ import { ThemeOptions } from '@mui/material/styles';
 import pxToRem from './functions/px-to-rem';
 
 const typography: ThemeOptions['typography'] = {
-  fontFamily: ['Nunito', 'sans-serif'].join(','),
+  fontFamily: ['Inter', 'sans-serif'].join(','),
   h1: {
     fontSize: pxToRem(40),
     fontWeight: 700,
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
   },
   h2: {
     fontSize: pxToRem(28),
     fontWeight: 700,
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
   },
   h3: {
     fontSize: pxToRem(25),
     fontWeight: 700,
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
   },
   h4: {
     fontSize: pxToRem(22),
     fontWeight: 700,
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
   },
   h5: {
     fontSize: pxToRem(20),
     fontWeight: 500,
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
   },
   h6: {
     fontSize: pxToRem(18),
     fontWeight: 500,
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
   },
   subtitle1: {
     fontSize: pxToRem(16),
     fontWeight: 500,
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
   },
   subtitle2: {
     fontSize: pxToRem(16),
     fontWeight: 400,
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
   },
   body1: {
     fontSize: pxToRem(14),
     fontWeight: 400,
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
   },
   body2: {
     fontSize: pxToRem(12),
     fontWeight: 400,
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
   },
   caption: {
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
   },
   button: {
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
   },
 };
 
 export default typography;
+

@@ -15,9 +15,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Redirect to root if already logged in and trying to access auth pages
+  // Redirect to dashboard directly if already logged in and trying to access auth pages
+  // Note: Avoid redirecting to '/' because '/' redirects to '/login' if client state isn't loaded yet
   if (isLoggedIn && (pathname === '/login' || pathname === '/sign-up' || pathname === '/forgot-password')) {
-    return NextResponse.redirect(new URL('/', request.url));
+    const userRole = request.cookies.get('bumdes_role')?.value;
+    if (userRole === 'admin') {
+      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+    } else if (userRole === 'pelanggan') {
+      return NextResponse.redirect(new URL('/pelanggan/dashboard', request.url));
+    }
   }
 
   return NextResponse.next();

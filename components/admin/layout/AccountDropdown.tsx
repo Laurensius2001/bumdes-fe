@@ -10,23 +10,15 @@ import { MouseEvent, ReactElement, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import profile from 'assets/profile/profile.jpg';
 
+import { useAuth } from '@/context/AuthContext';
+
 const AccountDropdown = (): ReactElement => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [userName, setUserName] = useState('Administrator');
-  const [userRole, setUserRole] = useState('Operator BUMDes');
   const open = Boolean(anchorEl);
-  const router = useRouter();
+  const { user, logout } = useAuth();
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('bumdes_user');
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        setUserName(user.username || 'Administrator');
-        setUserRole(user.role || 'Operator BUMDes');
-      } catch (e) {}
-    }
-  }, []);
+  const userName = user?.username || 'Administrator';
+  const userRole = user?.role || 'Operator BUMDes';
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -35,13 +27,10 @@ const AccountDropdown = (): ReactElement => {
     setAnchorEl(null);
   };
   const handleLogout = () => {
-    localStorage.removeItem('bumdes_logged_in');
-    localStorage.removeItem('bumdes_token');
-    localStorage.removeItem('bumdes_user');
-    document.cookie = 'bumdes_logged_in=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     handleClose();
-    router.push('/login');
+    logout();
   };
+
 
   return (
     <>
@@ -57,19 +46,18 @@ const AccountDropdown = (): ReactElement => {
         aria-haspopup="true"
         aria-expanded={open ? 'true' : undefined}
         onClick={handleClick}
-        className="flex items-center gap-2.5 rounded-full border border-gray-200 bg-white py-1.5 pl-1.5 pr-4 transition-all hover:bg-gray-50 focus:outline-none"
+        className="flex items-center space-x-2.5 cursor-pointer p-1 rounded-xl hover:bg-slate-100 transition-colors focus:outline-none"
       >
         <div className="relative">
-          <Avatar alt={userName} src={profile.src} sx={{ width: 34, height: 34 }} />
-          <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-green-500"></div>
+          <Avatar alt={userName} src={profile.src} sx={{ width: 32, height: 32, border: '1px solid #e2e8f0' }} />
         </div>
-        <div className="hidden flex-col items-start sm:flex">
-          <span className="text-[13px] font-bold text-gray-800 leading-tight">{userName}</span>
-          <span className="text-[11px] text-gray-500 leading-tight">{userRole}</span>
+        <div className="hidden md:block text-left pr-1">
+          <p className="text-xs font-semibold text-slate-700 leading-tight">{userName}</p>
+          <p className="text-[10px] text-slate-400 leading-tight">BTS Sodong Net</p>
         </div>
         <IconifyIcon
           icon={open ? 'lucide:chevron-up' : 'lucide:chevron-down'}
-          className="ml-1 text-gray-400 text-sm hidden sm:block"
+          className="text-[10px] text-slate-400 hidden md:block"
         />
       </button>
 

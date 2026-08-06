@@ -282,8 +282,8 @@ export default function AdminPaketPage() {
       label: 'Nama Paket',
       render: (row) => (
         <div>
-          <div className="font-bold text-gray-800 text-[14px]">{row.name}</div>
-          <div className="text-[11px] font-medium text-gray-400 mt-0.5">{row.id}</div>
+          <div className="font-semibold text-slate-900 text-xs sm:text-sm">{row.name}</div>
+          <div className="text-[11px] font-medium text-slate-400 mt-0.5">{row.id}</div>
         </div>
       ),
     },
@@ -292,28 +292,28 @@ export default function AdminPaketPage() {
       label: 'Jenis',
       render: (row) =>
         row.jenis === 'PPPOE' ? (
-          <span className="rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-bold text-indigo-600">PPPOE</span>
+          <span className="rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-200/80 px-2.5 py-0.5 text-[11px] font-semibold">PPPOE</span>
         ) : (
-          <span className="rounded-full bg-teal-100 px-3 py-1 text-[11px] font-bold text-teal-600">VOUCHER</span>
+          <span className="rounded-lg bg-teal-50 text-teal-600 border border-teal-200/80 px-2.5 py-0.5 text-[11px] font-semibold">VOUCHER</span>
         ),
     },
     {
       key: 'perangkat',
       label: 'Perangkat',
-      render: (row) => <span className="text-gray-600 text-[13px]">{row.perangkat}</span>,
+      render: (row) => <span className="text-slate-500 font-medium text-xs sm:text-sm">{row.perangkat}</span>,
     },
     {
       key: 'harga',
       label: 'Harga',
-      render: (row) => <span className="font-semibold text-[#6b42ff] text-[13px]">{row.harga}</span>,
+      render: (row) => <span className="font-semibold text-emerald-600 text-xs sm:text-sm">{row.harga}</span>,
     },
     {
       key: 'mbps',
       label: 'Kecepatan',
       render: (row) => (
-        <div className="flex items-center gap-1.5">
-          <IconifyIcon icon="lucide:gauge" className="text-gray-400 text-[14px]" />
-          <span className="font-semibold text-gray-700 text-[13px]">{row.mbps}</span>
+        <div className="flex items-center gap-1.5 text-slate-700 font-medium text-xs sm:text-sm">
+          <IconifyIcon icon="lucide:gauge" className="text-slate-400 text-xs" />
+          <span>{row.mbps}</span>
         </div>
       ),
     },
@@ -323,27 +323,37 @@ export default function AdminPaketPage() {
       render: (row) => {
         const s = row.status?.toLowerCase();
         if (s === 'aktif') {
-          return <span className="rounded-full bg-green-100 px-3 py-1 text-[11px] font-bold text-green-600">Aktif</span>;
+          return (
+            <span className="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
+            </span>
+          );
         }
-        return <span className="rounded-full bg-red-100 px-3 py-1 text-[11px] font-bold text-red-500">Nonaktif</span>;
+        return (
+          <span className="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-600 border border-rose-200 inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Nonaktif
+          </span>
+        );
       },
     },
     {
       key: 'id',
-      label: 'Action',
+      label: 'Aksi',
       render: (row) => (
-        <div className="flex items-center justify-end gap-2">
-          <button 
+        <div className="flex items-center justify-center space-x-1.5">
+          <button
             onClick={() => openEditModal(row)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-orange-500 transition-colors hover:bg-orange-100"
+            className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-slate-100 transition-colors"
+            title="Edit Paket"
           >
-            <IconifyIcon icon="lucide:edit" className="text-sm" />
+            <IconifyIcon icon="lucide:square-pen" className="text-xs" />
           </button>
           <button
             onClick={() => openDeleteConfirm(row.db_id, row.name)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-500 transition-colors hover:bg-red-100"
+            className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-100 transition-colors"
+            title="Hapus Paket"
           >
-            <IconifyIcon icon="lucide:trash-2" className="text-sm" />
+            <IconifyIcon icon="lucide:trash-2" className="text-xs" />
           </button>
         </div>
       ),
@@ -361,7 +371,7 @@ export default function AdminPaketPage() {
         isLoading={isLoading}
         searchKey="name"
         searchKeys={['name', 'id']}
-        searchPlaceholder="Search nama / kode paket..."
+        searchPlaceholder="Cari nama / kode paket . . ."
         statusOptions={['Aktif', 'Nonaktif']}
         onAdd={() => setIsModalOpen(true)}
         onExport={() => console.log('Export clicked')}

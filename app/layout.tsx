@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { Nunito } from "next/font/google";
+import { Inter } from "next/font/google";
 import ThemeProvider from "@/lib/providers/ThemeProvider";
+import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
-const nunito = Nunito({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-nunito",
+  variable: "--font-inter",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "BUMDes Dashboard",
-  description: "Dashboard Management System for BUMDes",
+  title: "BTS SODONG NET - BUMDes Tirta Sejahtera",
+  description: "Dashboard System - BUMDes Tirta Sejahtera",
 };
 
 export default function RootLayout({
@@ -21,11 +22,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-      <body className={nunito.className}>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+      <body className={`${inter.className} antialiased bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100`}>
+        <AuthProvider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
+
+

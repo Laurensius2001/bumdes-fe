@@ -6,6 +6,7 @@ import FormModal from '@/components/FormModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import IconifyIcon from '@/components/common/IconifyIcon';
 import { toast } from '@/components/Toast';
+import { Tooltip } from '@mui/material';
 import { pelangganService } from '@/services/pelangganService';
 import { paketService } from '@/services/paketService';
 
@@ -45,7 +46,7 @@ type Pelanggan = {
 // ─── Map API data → DataTable row ─────────────────────────
 const mapApiToRow = (p: PelangganAPI, paketList: { id: number; nama_paket: string }[]): Pelanggan => {
   const paketInfo = paketList.find(pkt => pkt.id === p.paket_id);
-  
+
   return {
     db_id: p.id,
     id: p.kode_pelanggan,
@@ -68,12 +69,12 @@ export default function AdminPelangganPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteData, setDeleteData] = useState<{ id: number; nama: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   // Edit State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
-  
+
   // Custom filter state
   const [paketFilter, setPaketFilter] = useState('Semua Paket');
   const [paketDropdownOpen, setPaketDropdownOpen] = useState(false);
@@ -92,14 +93,20 @@ export default function AdminPelangganPage() {
       if (resPaket.ok && resPaket.data?.data) {
         currentPaketList = resPaket.data.data;
         setPaketList(currentPaketList);
-        
-        const options = currentPaketList.map((p: any) => {
+
+        // Filter paket yang berstatus 'Aktif' saja
+        const activePaketList = currentPaketList.filter((p: any) => {
+          const statusUpper = String(p.status || '').toUpperCase();
+          return statusUpper === 'AKTIF';
+        });
+
+        const options = activePaketList.map((p: any) => {
           let labelText = `${p.nama_paket} (${p.jenis_paket})`;
           if (p.jenis_paket === 'VOUCHER' && p.jumlah_perangkat) {
             labelText += ` - ${p.jumlah_perangkat} Perangkat`;
           }
           labelText += ` - Rp ${Number(p.harga).toLocaleString('id-ID')}`;
-          
+
           return {
             label: labelText,
             value: p.id
@@ -203,7 +210,7 @@ export default function AdminPelangganPage() {
       placeholder: 'Pilih Status',
       options: [
         { label: 'Aktif', value: 'Aktif' },
-        { label: 'Non Aktif', value: 'Non Aktif' },
+        { label: 'Nonaktif', value: 'Nonaktif' },
       ],
       required: true,
     }
@@ -217,7 +224,7 @@ export default function AdminPelangganPage() {
       no_hp: row.telepon,
       alamat: row.alamat,
       paket_id: row.api_data?.paket_id?.toString() || '',
-      status: (row.status === 'nonaktif' || (row.status as string) === 'Non Aktif') ? 'Non Aktif' : 'Aktif',
+      status: row.status === 'nonaktif' ? 'nonaktif' : 'aktif',
     });
     setIsEditModalOpen(true);
   };
@@ -284,8 +291,8 @@ export default function AdminPelangganPage() {
       label: 'ID / Nama Pelanggan',
       render: (row) => (
         <div>
-          <div className="font-bold text-gray-800 text-[14px]">{row.name}</div>
-          <div className="text-[11px] font-medium text-gray-400 mt-0.5">{row.id}</div>
+          <div className="font-bold text-gray-800 text-[12.5px] leading-tight">{row.name}</div>
+          <div className="text-[10.5px] font-medium text-gray-400 mt-0.5">{row.id}</div>
         </div>
       ),
     },
@@ -315,35 +322,55 @@ export default function AdminPelangganPage() {
       key: 'status',
       label: 'Status',
       render: (row) => {
-        switch (row.status) {
+        switch (row.status?.toLowerCase()) {
           case 'aktif':
-            return <span className="rounded-full bg-green-100 px-3 py-1 text-[11px] font-bold text-green-600">Aktif</span>;
+            return (
+              <span className="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 inline-flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
+              </span>
+            );
           case 'isolir':
-            return <span className="rounded-full bg-yellow-100 px-3 py-1 text-[11px] font-bold text-yellow-600">Isolir</span>;
+            return (
+              <span className="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-amber-50 text-amber-600 border border-amber-200 inline-flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Isolir
+              </span>
+            );
           case 'nonaktif':
-            return <span className="rounded-full bg-red-100 px-3 py-1 text-[11px] font-bold text-red-500">Non-Aktif</span>;
+            return (
+              <span className="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-600 border border-rose-200 inline-flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Nonaktif
+              </span>
+            );
           default:
-            return <span className="rounded-full bg-gray-100 px-3 py-1 text-[11px] font-bold text-gray-500">{row.status}</span>;
+            return (
+              <span className="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-slate-100 text-slate-600 border border-slate-200 inline-flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> {row.status}
+              </span>
+            );
         }
       },
     },
     {
       key: 'id',
-      label: 'Action',
+      label: 'Aksi',
       render: (row) => (
-        <div className="flex items-center justify-end gap-2">
-          <button 
-            onClick={() => openEditModal(row)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-orange-500 transition-colors hover:bg-orange-100"
-          >
-            <IconifyIcon icon="lucide:edit" className="text-sm" />
-          </button>
-          <button 
-            onClick={() => openDeleteConfirm(row.db_id, row.name)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-500 transition-colors hover:bg-red-100"
-          >
-            <IconifyIcon icon="lucide:trash-2" className="text-sm" />
-          </button>
+        <div className="flex items-center justify-center space-x-1.5">
+          <Tooltip title="Edit Pelanggan" placement="top">
+            <button
+              onClick={() => openEditModal(row)}
+              className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-slate-100 transition-colors"
+            >
+              <IconifyIcon icon="lucide:square-pen" className="text-xs" />
+            </button>
+          </Tooltip>
+          <Tooltip title="Hapus Pelanggan" placement="top">
+            <button
+              onClick={() => openDeleteConfirm(row.db_id, row.name)}
+              className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-100 transition-colors"
+            >
+              <IconifyIcon icon="lucide:trash-2" className="text-xs" />
+            </button>
+          </Tooltip>
         </div>
       ),
     },
@@ -364,7 +391,7 @@ export default function AdminPelangganPage() {
           <IconifyIcon icon="lucide:router" className="text-indigo-500" />
           <h4 className="text-[13px] font-bold text-gray-800 uppercase tracking-wide">Detail Layanan Internet</h4>
         </div>
-        
+
         <div className="flex flex-wrap gap-3">
           <div className="flex-1 min-w-[140px] bg-white p-3 rounded-xl border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] transition-all hover:border-indigo-200 hover:shadow-md">
             <div className="text-[11px] text-gray-400 font-medium mb-1 uppercase tracking-wider">Jenis Paket</div>
@@ -373,7 +400,7 @@ export default function AdminPelangganPage() {
               {pkt.jenis_paket}
             </div>
           </div>
-          
+
           <div className="flex-1 min-w-[140px] bg-white p-3 rounded-xl border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] transition-all hover:border-indigo-200 hover:shadow-md">
             <div className="text-[11px] text-gray-400 font-medium mb-1 uppercase tracking-wider">Kecepatan</div>
             <div className="text-[13px] font-bold text-indigo-600 flex items-center gap-1.5">
@@ -381,7 +408,7 @@ export default function AdminPelangganPage() {
               {pkt.mbps} Mbps
             </div>
           </div>
-          
+
           <div className="flex-1 min-w-[140px] bg-white p-3 rounded-xl border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] transition-all hover:border-indigo-200 hover:shadow-md">
             <div className="text-[11px] text-gray-400 font-medium mb-1 uppercase tracking-wider">Harga Bulanan</div>
             <div className="text-[13px] font-bold text-emerald-600 flex items-center gap-1.5">
@@ -389,7 +416,7 @@ export default function AdminPelangganPage() {
               Rp {Number(pkt.harga).toLocaleString('id-ID')}
             </div>
           </div>
-          
+
           <div className="flex-1 min-w-[140px] bg-white p-3 rounded-xl border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] transition-all hover:border-indigo-200 hover:shadow-md">
             <div className="text-[11px] text-gray-400 font-medium mb-1 uppercase tracking-wider">Status Paket</div>
             <div className="text-[13px] font-bold flex items-center gap-1.5">
@@ -400,7 +427,7 @@ export default function AdminPelangganPage() {
               )}
             </div>
           </div>
-          
+
           {pkt.jenis_paket === 'VOUCHER' && (
             <>
               <div className="flex-1 min-w-[140px] bg-white p-3 rounded-xl border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] transition-all hover:border-indigo-200 hover:shadow-md">
@@ -410,7 +437,7 @@ export default function AdminPelangganPage() {
                   <span className="bg-gray-100 px-2 py-0.5 rounded text-[#6b42ff]">{pkt.kode_voucher}</span>
                 </div>
               </div>
-              
+
               <div className="flex-1 min-w-[140px] bg-white p-3 rounded-xl border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] transition-all hover:border-indigo-200 hover:shadow-md">
                 <div className="text-[11px] text-gray-400 font-medium mb-1 uppercase tracking-wider">Max Perangkat</div>
                 <div className="text-[13px] font-bold text-gray-800 flex items-center gap-1.5">
@@ -432,7 +459,7 @@ export default function AdminPelangganPage() {
   }, [data, paketFilter]);
 
   const paketFilterNode = (
-    <div 
+    <div
       className="relative"
       tabIndex={0}
       onBlur={(e) => {
@@ -443,19 +470,22 @@ export default function AdminPelangganPage() {
     >
       <button
         onClick={() => setPaketDropdownOpen(!paketDropdownOpen)}
-        className="inline-flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 h-[38px] min-w-[150px] text-[13px] font-medium text-gray-700 outline-none hover:bg-gray-50 focus:border-[#6b42ff] transition-colors"
+        className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors shadow-xs flex items-center justify-between space-x-2.5 min-w-[145px]"
       >
-        <span className="leading-none mt-[2px]">{paketFilter}</span>
-        <IconifyIcon icon="lucide:chevron-down" className={`text-gray-400 text-sm transition-transform ${paketDropdownOpen ? 'rotate-180' : ''}`} />
+        <span className="flex items-center gap-1.5">
+          <IconifyIcon icon="lucide:box" className="text-xs text-slate-500" />
+          <span>{paketFilter === 'VOUCHER' ? 'VOUCHER RUMAHAN' : paketFilter}</span>
+        </span>
+        <IconifyIcon icon="lucide:chevron-down" className={`text-slate-400 text-xs transition-transform ${paketDropdownOpen ? 'rotate-180' : ''}`} />
       </button>
-      
+
       {paketDropdownOpen && (
-        <div className="absolute left-0 top-full mt-2 w-full rounded-xl border border-gray-100 bg-white p-1 shadow-lg z-20">
+        <div className="absolute left-0 top-full mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg z-20 space-y-1">
           {['Semua Paket', 'PPPOE', 'VOUCHER'].map(opt => (
             <button
               key={opt}
               onClick={() => { setPaketFilter(opt); setPaketDropdownOpen(false); }}
-              className={`w-full text-left px-3 py-2 text-[13px] font-medium rounded-lg transition-colors ${paketFilter === opt ? 'bg-[#6b42ff]/10 text-[#6b42ff]' : 'text-gray-700 hover:bg-gray-50'}`}
+              className={`w-full text-left px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${paketFilter === opt ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'text-slate-700 hover:bg-slate-50'}`}
             >
               {opt === 'VOUCHER' ? 'VOUCHER RUMAHAN' : opt}
             </button>
@@ -476,8 +506,8 @@ export default function AdminPelangganPage() {
         isLoading={isLoading}
         searchKey="name"
         searchKeys={['name', 'id']}
-        searchPlaceholder="Search nama / ID pelanggan..."
-        statusOptions={['aktif', 'isolir', 'nonaktif']}
+        searchPlaceholder="Cari nama / ID pelanggan . . ."
+        statusOptions={['Aktif', 'Nonaktif']}
         onAdd={() => setIsModalOpen(true)}
         onExport={() => console.log('Export clicked')}
         renderExpandedRow={renderExpandedRow}
@@ -515,7 +545,7 @@ export default function AdminPelangganPage() {
         title="Hapus Pelanggan"
         message={
           <>
-            Apakah Anda yakin ingin menghapus pelanggan <span className="font-bold text-gray-900">{deleteData?.nama}</span>?<br/>
+            Apakah Anda yakin ingin menghapus pelanggan <span className="font-bold text-gray-900">{deleteData?.nama}</span>?<br />
             Tindakan ini tidak dapat dibatalkan dan akan menghapus akun user yang terkait.
           </>
         }

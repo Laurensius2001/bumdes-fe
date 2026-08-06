@@ -8,7 +8,7 @@ import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import Footer from './Footer';
 
-export const drawerWidth = 278;
+export const drawerWidth = 288;
 
 const MainLayout = ({ children }: PropsWithChildren): ReactElement | null => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -43,11 +43,11 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement | null => {
 
   if (!isMounted) return null;
 
-  const currentSidebarWidth = isCollapsed ? 78 : 300;
+  const currentSidebarWidth = isCollapsed ? 75 : 288;
 
   return (
     <>
-      <Stack direction="row" minHeight="100vh" bgcolor="#f5f7fa">
+      <Stack direction="row" minHeight="100vh" bgcolor="#f8fafc">
         <Topbar handleDrawerToggle={handleDrawerToggle} isCollapsed={isCollapsed} />
         <Box
           component="nav"
@@ -71,7 +71,7 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement | null => {
               '& .MuiDrawer-paper': {
                 boxSizing: 'border-box',
                 border: 0,
-                backgroundColor: '#11101d',
+                backgroundColor: '#020617',
               },
             }}
           >
@@ -85,7 +85,7 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement | null => {
                 boxSizing: 'border-box',
                 width: currentSidebarWidth,
                 border: 0,
-                backgroundColor: '#11101d',
+                backgroundColor: '#020617',
                 transition: 'width 0.3s ease',
                 overflow: 'visible',
               },
@@ -100,15 +100,15 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement | null => {
           sx={{
             flexGrow: 1,
             minHeight: '100vh',
-            bgcolor: '#f8f9fa',
+            bgcolor: '#f1f5f9',
             width: { lg: `calc(100% - ${currentSidebarWidth}px)` },
             transition: 'all 0.3s ease',
             position: 'relative',
           }}
         >
-          <Toolbar sx={{ height: 80 }} />
-          <Box sx={{ px: 4, pb: 4, pt: 2 }}>
-            {children}
+          <Toolbar sx={{ height: 64 }} />
+          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 64px)' }}>
+            <Box sx={{ flex: 1, px: { xs: 2, sm: 3, lg: 4 }, pt: 3, pb: 4 }}>{children}</Box>
             <Footer />
           </Box>
         </Box>
@@ -118,3 +118,4 @@ const MainLayout = ({ children }: PropsWithChildren): ReactElement | null => {
 };
 
 export default MainLayout;
+

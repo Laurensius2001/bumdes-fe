@@ -18,6 +18,7 @@ interface DataTableProps<T> {
   searchPlaceholder?: string;
   statusOptions?: string[];
   onAdd?: () => void;
+  addButtonText?: string;
   onExport?: () => void;
   isLoading?: boolean; // New prop for loading state
   renderExpandedRow?: (row: T) => ReactNode; // New prop for collapsible rows
@@ -126,6 +127,7 @@ export default function DataTable<T extends Record<string, any>>({
   searchPlaceholder = 'Search...',
   statusOptions = [],
   onAdd,
+  addButtonText,
   onExport,
   isLoading = false,
   renderExpandedRow,
@@ -164,9 +166,13 @@ export default function DataTable<T extends Record<string, any>>({
   // Filter by selected status on top of search results
   const filteredData = useMemo(() => {
     if (selectedStatus === 'Semua Status') return searchedData;
-    return searchedData.filter(
-      (row) => String(row['status']).toLowerCase() === selectedStatus.toLowerCase()
-    );
+    return searchedData.filter((row) => {
+      const s = String(row['status'] || '').toLowerCase();
+      const target = selectedStatus.toLowerCase();
+      if (target === 'baru' || target === 'menunggu') return s === 'baru' || s === 'menunggu';
+      if (target === 'proses' || target === 'diproses' || target === 'dalam proses') return s === 'proses' || s === 'diproses' || s === 'dalam proses';
+      return s === target;
+    });
   }, [searchedData, selectedStatus]);
 
   // Pagination logic
@@ -181,250 +187,299 @@ export default function DataTable<T extends Record<string, any>>({
     setPage(1); // Reset to page 1 on new search
   };
 
+  const defaultAddText = addButtonText || `Tambah ${title.replace(/^Daftar\s+/i, '')}`;
+
   return (
-    <div className="flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      
-      {/* Top Section (Header & Toolbar) */}
-      <div className="px-6 pt-6 pb-4">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#6b42ff]">
+    <div className="flex flex-col gap-6">
+      {/* Page Header Card */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div className="flex items-start space-x-4">
+          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100 flex items-center justify-center">
             <IconifyIcon icon={icon} className="text-2xl" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-800">{title}</h2>
-            <p className="text-[13px] text-gray-500">{subtitle}</p>
+            <div className="flex items-center space-x-3">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{title}</h2>
+              <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                {filteredData.length} Data
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">{subtitle}</p>
           </div>
         </div>
 
-        {/* Toolbar */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-3">
-            {onExport && (
-              <button 
-                onClick={onExport}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#10b981] px-4 h-[38px] text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-[#059669]"
-              >
-                <IconifyIcon icon="lucide:file-spreadsheet" className="text-base" />
-                <span className="leading-none mt-[2px]">Export Excel</span>
-              </button>
-            )}
-            
-            {statusOptions.length > 0 && (
-              <div 
-                className="relative"
-                tabIndex={0}
-                onBlur={(e) => {
-                  if (!e.currentTarget.contains(e.relatedTarget)) {
-                    setStatusDropdownOpen(false);
-                  }
-                }}
-              >
-                <button
-                  onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                  className="inline-flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 h-[38px] min-w-[140px] text-[13px] font-medium text-gray-700 outline-none hover:bg-gray-50 focus:border-[#6b42ff] transition-colors"
-                >
-                  <span className="leading-none mt-[2px]">{selectedStatus}</span>
-                  <IconifyIcon icon="lucide:chevron-down" className={`text-gray-400 text-sm transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {statusDropdownOpen && (
-                  <div className="absolute left-0 top-full mt-2 w-full rounded-xl border border-gray-100 bg-white p-1 shadow-lg z-20">
-                    <button
-                      onClick={() => { setSelectedStatus('Semua Status'); setStatusDropdownOpen(false); }}
-                      className={`w-full text-left px-3 py-2 text-[13px] font-medium rounded-lg transition-colors ${selectedStatus === 'Semua Status' ? 'bg-[#6b42ff]/10 text-[#6b42ff]' : 'text-gray-700 hover:bg-gray-50'}`}
-                    >
-                      Semua Status
-                    </button>
-                    {statusOptions.map(opt => (
-                      <button
-                        key={opt}
-                        onClick={() => { setSelectedStatus(opt); setStatusDropdownOpen(false); }}
-                        className={`w-full text-left px-3 py-2 text-[13px] font-medium rounded-lg transition-colors ${selectedStatus === opt ? 'bg-[#6b42ff]/10 text-[#6b42ff]' : 'text-gray-700 hover:bg-gray-50'}`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {customToolbarNode}
+        {/* Header Action Buttons */}
+        <div className="flex items-center space-x-2.5 self-start md:self-auto">
+          {customToolbarNode}
+          {onExport && (
+            <button
+              onClick={onExport}
+              className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors shadow-xs flex items-center space-x-2"
+            >
+              <IconifyIcon icon="lucide:file-spreadsheet" className="text-xs text-slate-500" />
+              <span>Export Excel</span>
+            </button>
+          )}
+          {onAdd && (
+            <button
+              onClick={onAdd}
+              className="px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-all shadow-sm shadow-emerald-600/20 flex items-center space-x-2"
+            >
+              <IconifyIcon icon="lucide:plus" className="text-xs" />
+              <span>{defaultAddText}</span>
+            </button>
+          )}
+        </div>
+      </div>
 
-            <div className="relative flex-1 min-w-[200px] max-w-[300px]">
-              <IconifyIcon icon="lucide:search" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-base" />
+      {/* Table Main Container */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        
+        {/* Filter Bar & Controls */}
+        <div className="p-4 sm:p-5 border-b border-slate-200/80 bg-slate-50/50 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+          
+          {/* Status Tabs */}
+          {statusOptions.length > 0 ? (
+            <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto pb-1 lg:pb-0">
+              <button
+                onClick={() => { setSelectedStatus('Semua Status'); setPage(1); }}
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all flex items-center space-x-2 shrink-0 ${
+                  selectedStatus === 'Semua Status'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-200/60 font-medium'
+                }`}
+              >
+                <span>Semua Status</span>
+                <span className={`px-1.5 py-0.5 text-[10px] rounded-md font-semibold min-w-[18px] inline-flex items-center justify-center ${selectedStatus === 'Semua Status' ? 'bg-emerald-700/90 text-white' : 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/30'}`}>
+                  {searchedData.length}
+                </span>
+              </button>
+
+              {statusOptions.map((opt) => {
+                const count = searchedData.filter((row) => {
+                  const s = String(row['status'] || '').toUpperCase();
+                  const targetOpt = opt.toUpperCase();
+                  if (targetOpt === 'BARU' || targetOpt === 'MENUNGGU') return s === 'BARU' || s === 'MENUNGGU';
+                  if (targetOpt === 'PROSES' || targetOpt === 'DIPROSES' || targetOpt === 'DALAM PROSES') return s === 'PROSES' || s === 'DIPROSES' || s === 'DALAM PROSES';
+                  return s === targetOpt;
+                }).length;
+
+                const isSelected = selectedStatus.toLowerCase() === opt.toLowerCase();
+                const optUpper = opt.toUpperCase();
+
+                let badgeColor = 'bg-slate-100 text-slate-600 border border-slate-200';
+                if (optUpper.includes('BARU') || optUpper.includes('MENUNGGU')) {
+                  badgeColor = 'bg-amber-500/10 text-amber-600 border border-amber-500/30';
+                } else if (optUpper.includes('PROSES')) {
+                  badgeColor = 'bg-sky-500/10 text-sky-600 border border-sky-500/30';
+                } else if (optUpper.includes('NONAKTIF') || optUpper.includes('DITOLAK') || optUpper.includes('ISOLIR')) {
+                  badgeColor = 'bg-rose-500/10 text-rose-600 border border-rose-500/30';
+                } else if (optUpper.includes('SELESAI') || optUpper.includes('AKTIF')) {
+                  badgeColor = 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/30';
+                }
+
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => { setSelectedStatus(opt); setPage(1); }}
+                    className={`px-3.5 py-1.5 text-xs rounded-xl transition-all flex items-center space-x-2 shrink-0 ${
+                      isSelected
+                        ? 'bg-emerald-600 text-white font-semibold shadow-xs'
+                        : 'text-slate-600 hover:bg-slate-200/60 font-medium'
+                    }`}
+                  >
+                    <span>{opt}</span>
+                    <span className={`px-1.5 py-0.5 text-[10px] rounded-md font-semibold min-w-[18px] inline-flex items-center justify-center ${isSelected ? 'bg-emerald-700/90 text-white' : badgeColor}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : <div />}
+
+          {/* Search Bar & Reset */}
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex-1 sm:w-72 lg:w-80">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                <IconifyIcon icon="lucide:search" className="text-xs" />
+              </span>
               <input
                 type="text"
                 placeholder={searchPlaceholder}
                 value={search}
                 onChange={handleSearch}
-                className="w-full rounded-lg border border-gray-200 bg-white h-[38px] pl-11 pr-4 text-[13px] outline-none transition-colors focus:border-[#6b42ff] placeholder:text-gray-500"
+                className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-800 placeholder-slate-400 transition-all outline-none"
               />
             </div>
-          </div>
 
-          <div className="flex w-full items-center justify-end sm:w-auto mt-4 sm:mt-0">
-            {onAdd && (
-              <button 
-                onClick={onAdd}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#6b42ff] px-5 h-[38px] text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-[#5936f1]"
-              >
-                <IconifyIcon icon="lucide:plus" className="text-base" />
-                <span className="leading-none mt-[2px]">Add {title.replace('Data ', '')}</span>
-              </button>
-            )}
+            <button
+              onClick={() => { setSearch(''); setSelectedStatus('Semua Status'); setPage(1); }}
+              title="Reset Filter"
+              className="p-2.5 text-xs font-medium text-slate-600 hover:bg-slate-200/60 rounded-xl border border-slate-200 transition-colors"
+            >
+              <IconifyIcon icon="lucide:rotate-ccw" className="text-sm" />
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto w-full">
-        <table className="w-full min-w-[900px] border-collapse text-left text-[13px]">
-          <thead>
-            <tr className="bg-[#5936f1] text-white">
-              {renderExpandedRow && <th className="w-10 px-4 py-4"></th>}
-              {columns.map((col, index) => (
-                <th 
-                  key={col.key} 
-                  className={`px-6 py-4 font-bold uppercase tracking-wider text-[11px] ${index === columns.length - 1 ? 'text-right' : ''}`}
-                >
-                  {col.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 bg-white">
-            {isLoading ? (
-              <tr>
-                <td colSpan={columns.length} className="px-6 py-20 text-center text-gray-400 text-[14px]">
-                  <IconifyIcon icon="lucide:loader-circle" className="animate-spin mr-2 inline-flex text-xl align-middle" />
-                  <span className="align-middle">Memuat data...</span>
-                </td>
+        {/* Table Content */}
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-100/80 border-b border-slate-200/90 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                {renderExpandedRow && <th className="py-3.5 px-4 sm:px-6 w-9"></th>}
+                {columns.map((col, index) => (
+                  <th
+                    key={col.key}
+                    className={`py-3.5 px-4 sm:px-6 ${index === columns.length - 1 ? 'text-center' : ''}`}
+                  >
+                    {col.label}
+                  </th>
+                ))}
               </tr>
-            ) : paginatedData.length > 0 ? (
-              paginatedData.map((row, rowIndex) => {
-                const isExpanded = expandedRows.has(rowIndex);
-                const toggleExpand = () => {
-                  setExpandedRows((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(rowIndex)) next.delete(rowIndex);
-                    else next.add(rowIndex);
-                    return next;
-                  });
-                };
-                
-                return (
-                  <React.Fragment key={rowIndex}>
-                    <tr className="transition-colors hover:bg-gray-50">
-                      {renderExpandedRow && (
-                        <td className="px-4 py-3 whitespace-nowrap text-center">
-                          <button
-                            onClick={toggleExpand}
-                            className={`flex h-6 w-6 items-center justify-center rounded-md transition-colors ${
-                              isExpanded ? 'bg-[#6b42ff] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                            }`}
+            </thead>
+            <tbody className="divide-y divide-slate-200/80 text-xs sm:text-sm text-slate-700 font-medium">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={columns.length + (renderExpandedRow ? 1 : 0)} className="py-16 text-center text-slate-400">
+                    <IconifyIcon icon="lucide:loader-circle" className="animate-spin mr-2 inline-flex text-xl align-middle" />
+                    <span className="align-middle font-medium">Memuat data...</span>
+                  </td>
+                </tr>
+              ) : paginatedData.length > 0 ? (
+                paginatedData.map((row, rowIndex) => {
+                  const isExpanded = expandedRows.has(rowIndex);
+                  const toggleExpand = () => {
+                    setExpandedRows((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(rowIndex)) next.delete(rowIndex);
+                      else next.add(rowIndex);
+                      return next;
+                    });
+                  };
+
+                  return (
+                    <React.Fragment key={rowIndex}>
+                      <tr className="hover:bg-slate-50/80 transition-colors">
+                        {renderExpandedRow && (
+                          <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                            <button
+                              onClick={toggleExpand}
+                              className={`flex h-5 w-5 items-center justify-center rounded transition-colors ${
+                                isExpanded ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                              }`}
+                            >
+                              <IconifyIcon
+                                icon="lucide:chevron-down"
+                                className={`text-xs transition-transform duration-200 ${isExpanded ? 'rotate-180' : '-rotate-90'}`}
+                              />
+                            </button>
+                          </td>
+                        )}
+                        {columns.map((col, colIndex) => (
+                          <td
+                            key={col.key}
+                            className={`py-3.5 px-4 sm:px-6 whitespace-nowrap ${colIndex === columns.length - 1 ? 'text-center' : ''}`}
                           >
-                            <IconifyIcon 
-                              icon="lucide:chevron-down" 
-                              className={`text-[14px] transition-transform duration-200 ${isExpanded ? 'rotate-180' : '-rotate-90'}`}
-                            />
-                          </button>
-                        </td>
-                      )}
-                      {columns.map((col, colIndex) => (
-                        <td 
-                          key={col.key} 
-                          className={`px-6 py-3 whitespace-nowrap ${colIndex === columns.length - 1 ? 'text-right' : ''}`}
-                        >
-                          {col.render ? col.render(row) : String(row[col.key] ?? '')}
-                        </td>
-                      ))}
-                    </tr>
-                    {isExpanded && renderExpandedRow && (
-                      <tr className="bg-gray-50/50">
-                        <td colSpan={columns.length + 1} className="p-0 border-t border-gray-100">
-                          <div className="overflow-hidden bg-[#fafafa]">
-                            {renderExpandedRow(row)}
-                          </div>
-                        </td>
+                            {col.render ? col.render(row) : String(row[col.key] ?? '')}
+                          </td>
+                        ))}
                       </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan={columns.length} className="px-6 py-20 text-center">
-                  <div className="flex flex-col items-center justify-center gap-3">
-                    <IconifyIcon icon="lucide:inbox" className="text-[64px] text-gray-200" />
-                    <span className="text-[14px] font-medium text-gray-400">Data tidak ditemukan</span>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination Footer */}
-      <div className="px-6 py-5 flex flex-col items-center justify-between gap-4 sm:flex-row border-t border-gray-100">
-        <div className="text-[13px] font-medium text-gray-500">
-          Showing {filteredData.length > 0 ? (page - 1) * rowsPerPage + 1 : 0} - {Math.min(filteredData.length, page * rowsPerPage)} of {filteredData.length} records
+                      {isExpanded && renderExpandedRow && (
+                        <tr className="bg-slate-50/50">
+                          <td colSpan={columns.length + 1} className="p-0 border-t border-slate-100">
+                            <div className="overflow-hidden bg-slate-50/80">
+                              {renderExpandedRow(row)}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={columns.length + (renderExpandedRow ? 1 : 0)} className="py-16 px-4 text-center">
+                    <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-200/60">
+                      <IconifyIcon icon="lucide:folder-open" className="text-2xl" />
+                    </div>
+                    <h4 className="text-base font-bold text-slate-800">Data Tidak Ditemukan</h4>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+                      Belum ada data keluhan pelanggan untuk kriteria atau status yang Anda pilih.
+                    </p>
+                    <button
+                      onClick={() => { setSearch(''); setSelectedStatus('Semua Status'); setPage(1); }}
+                      className="mt-4 inline-flex items-center space-x-2 px-4 py-2 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 rounded-xl transition-colors"
+                    >
+                      <IconifyIcon icon="lucide:rotate-ccw" className="text-xs" />
+                      <span>Reset Filter & Pencarian</span>
+                    </button>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] text-gray-500">Rows:</span>
-            <div className="relative">
+
+        {/* Table Footer & Pagination */}
+        <div className="px-4 sm:px-6 py-4 border-t border-slate-200/80 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-slate-500 text-center sm:text-left">
+            Menampilkan {filteredData.length > 0 ? (page - 1) * rowsPerPage + 1 : 0} - {Math.min(filteredData.length, page * rowsPerPage)} dari {filteredData.length} keluhan
+          </p>
+
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-xs text-slate-500">
+              <span>Tampilkan:</span>
               <select
                 value={rowsPerPage}
                 onChange={(e) => {
                   setRowsPerPage(Number(e.target.value));
                   setPage(1);
                 }}
-                className="appearance-none rounded-full border border-gray-200 bg-white px-3 py-1 pr-6 text-[13px] font-medium text-gray-700 outline-none"
+                className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-emerald-500 text-xs font-medium text-slate-700 outline-none"
               >
-                <option value={5}>5 rows</option>
-                <option value={10}>10 rows</option>
-                <option value={25}>25 rows</option>
+                <option value={5}>5 Baris</option>
+                <option value={10}>10 Baris</option>
+                <option value={25}>25 Baris</option>
+                <option value={50}>50 Baris</option>
               </select>
-              <IconifyIcon icon="lucide:chevron-down" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
+            </div>
+
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-100 disabled:opacity-40 transition-colors"
+              >
+                <IconifyIcon icon="lucide:chevron-left" className="text-xs px-1" />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setPage(pageNum)}
+                  className={`w-7 h-7 rounded-lg text-xs font-medium flex items-center justify-center transition-colors ${
+                    page === pageNum
+                      ? 'bg-emerald-600 text-white font-bold'
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-100 disabled:opacity-40 transition-colors"
+              >
+                <IconifyIcon icon="lucide:chevron-right" className="text-xs px-1" />
+              </button>
             </div>
           </div>
-          
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-50 disabled:opacity-50"
-            >
-              <IconifyIcon icon="lucide:chevron-left" className="text-sm" />
-            </button>
-            
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-              <button
-                key={pageNum}
-                onClick={() => setPage(pageNum)}
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold transition-colors ${
-                  page === pageNum
-                    ? 'bg-[#6b42ff] text-white shadow-md shadow-[#6b42ff]/20'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                {pageNum}
-              </button>
-            ))}
-
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-50 disabled:opacity-50"
-            >
-              <IconifyIcon icon="lucide:chevron-right" className="text-sm" />
-            </button>
-          </div>
         </div>
+
       </div>
     </div>
   );

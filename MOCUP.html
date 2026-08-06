@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTS SODONG NET - Management Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+        }
+
+        .bg-content-pattern {
+            background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .dark .bg-content-pattern {
+            background-image: radial-gradient(rgba(51, 65, 85, 0.3) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+
+<body
+    class="h-full bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased transition-colors duration-200 selection:bg-emerald-500 selection:text-white">
+
+    <div class="min-h-full flex flex-col lg:flex-row">
+
+        <!-- STICKY SIDEBAR -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-72 bg-slate-950 text-slate-300 transform -translate-x-full lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen transition-transform duration-200 ease-in-out flex flex-col justify-between shadow-xl shrink-0 border-r border-slate-800/80 relative overflow-hidden">
+
+            <!-- BACKGROUND WIFI GRAPHIC IN SIDEBAR -->
+            <div class="absolute -right-12 -bottom-10 pointer-events-none opacity-15 text-emerald-400 z-0">
+                <svg class="w-80 h-80" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="100" cy="100" r="90" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 6" />
+                    <circle cx="100" cy="100" r="70" stroke="currentColor" stroke-width="2" />
+                    <circle cx="100" cy="100" r="50" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 4" />
+                    <circle cx="100" cy="100" r="30" stroke="currentColor" stroke-width="2" />
+                    <circle cx="100" cy="100" r="10" fill="currentColor" />
+                    <path d="M 30 100 A 70 70 0 0 1 170 100" stroke="currentColor" stroke-width="3"
+                        stroke-linecap="round" />
+                    <path d="M 10 100 A 90 90 0 0 1 190 100" stroke="currentColor" stroke-width="4"
+                        stroke-linecap="round" />
+                </svg>
+            </div>
+            <div
+                class="absolute top-1/3 -left-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none z-0">
+            </div>
+
+            <div class="relative z-10 flex flex-col h-full justify-between">
+                <div>
+                    <!-- Sidebar Logo Header -->
+                    <div class="h-16 flex items-center justify-between px-5">
+                        <div class="flex items-center space-x-3">
+                            <div
+                                class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-bold shadow-md shadow-emerald-900/40">
+                                <i class="fa-solid font-bold fa-wifi text-sm"></i>
+                            </div>
+                            <div>
+                                <h1 class="text-sm font-bold text-white tracking-wide leading-tight">BTS SODONG NET</h1>
+                                <span
+                                    class="text-[10px] text-emerald-400 font-medium tracking-wider uppercase bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-500/30">BUMDES
+                                    TIRTA SEJAHTERA</span>
+                            </div>
+                        </div>
+                        <button onclick="toggleSidebar()"
+                            class="lg:hidden text-slate-400 hover:text-white focus:outline-none">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+
+                    <!-- Navigation Links -->
+                    <div class="px-3 py-5">
+                        <p class="px-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Menu
+                            Utama</p>
+                        <nav class="space-y-1.5" id="mainNav">
+                            <a href="#" onclick="switchPage('dashboard', this)" id="nav-dashboard"
+                                class="nav-item active flex items-center justify-between px-3.5 py-2.5 text-sm font-medium rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition-all shadow-xs">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fa-solid fa-cubes w-5 text-center text-emerald-400"></i>
+                                    <span>Dashboard</span>
+                                </div>
+                            </a>
+                            <a href="#" onclick="switchPage('pelanggan', this)" id="nav-pelanggan"
+                                class="nav-item flex items-center justify-between px-3.5 py-2.5 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-900/80 hover:text-white transition-all">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fa-solid fa-users w-5 text-center text-slate-400"></i>
+                                    <span>Data Pelanggan</span>
+                                </div>
+                                <span
+                                    class="bg-slate-800 text-slate-300 text-xs px-2 py-0.5 rounded-full font-semibold">248</span>
+                            </a>
+                            <a href="#" onclick="switchPage('paket', this)" id="nav-paket"
+                                class="nav-item flex items-center justify-between px-3.5 py-2.5 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-900/80 hover:text-white transition-all">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fa-solid fa-network-wired w-5 text-center text-slate-400"></i>
+                                    <span>Paket Internet</span>
+                                </div>
+                                <span
+                                    class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded">1Gbps</span>
+                            </a>
+                            <a href="#" onclick="switchPage('keluhan', this)" id="nav-keluhan"
+                                class="nav-item flex items-center justify-between px-3.5 py-2.5 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-900/80 hover:text-white transition-all">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fa-regular fa-comment-dots w-5 text-center text-slate-400"></i>
+                                    <span>Keluhan Pelanggan</span>
+                                </div>
+                                <span
+                                    class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-semibold px-2 py-0.5 rounded-full"
+                                    id="sidebarComplaintBadge">5 Laporan</span>
+                            </a>
+                            <a href="#" onclick="switchPage('tagihan', this)" id="nav-tagihan"
+                                class="nav-item flex items-center justify-between px-3.5 py-2.5 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-900/80 hover:text-white transition-all">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fa-solid fa-file-invoice-dollar w-5 text-center text-slate-400"></i>
+                                    <span>Tagihan</span>
+                                </div>
+                                <span
+                                    class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-semibold px-2 py-0.5 rounded-full">42
+                                    Belum</span>
+                            </a>
+                            <a href="#" onclick="switchPage('struk', this)" id="nav-struk"
+                                class="nav-item flex items-center justify-between px-3.5 py-2.5 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-900/80 hover:text-white transition-all">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fa-solid fa-print w-5 text-center text-slate-400"></i>
+                                    <span>Cetak Struk</span>
+                                </div>
+                                <span
+                                    class="bg-purple-500/10 text-purple-300 border border-purple-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded">POS</span>
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- Admin User Profile -->
+                <div class="p-3 border-t border-slate-800/80 bg-slate-900/40">
+                    <div
+                        class="flex items-center justify-between p-2 rounded-xl bg-slate-900/80 hover:bg-slate-900 transition-colors">
+                        <div class="flex items-center space-x-3 overflow-hidden">
+                            <div
+                                class="w-9 h-9 rounded-lg bg-emerald-700 flex items-center justify-center font-bold text-white shrink-0 shadow">
+                                A
+                            </div>
+                            <div class="truncate">
+                                <p class="text-sm font-semibold text-white leading-tight truncate">admin</p>
+                                <p class="text-[11px] text-slate-400 truncate">BTS Sodong Net</p>
+                            </div>
+                        </div>
+                        <button title="Keluar" onclick="showToast('Sesi logout berhasil', 'info')"
+                            class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors">
+                            <i class="fa-solid fa-right-from-bracket text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <div class="flex-1 flex flex-col min-w-0 bg-content-pattern transition-colors relative overflow-hidden">
+
+            <!-- SUBTLE BACKGROUND WATERMARK -->
+            <div class="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-10 dark:opacity-10">
+                <svg class="absolute -right-24 top-16 text-slate-400 dark:text-slate-700"
+                    style="width: 320px; height: 320px; max-width: 100%;" viewBox="0 0 200 200" fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="100" cy="100" r="90" stroke="currentColor" stroke-width="1" stroke-dasharray="5 5" />
+                    <circle cx="100" cy="100" r="70" stroke="currentColor" stroke-width="1.5" />
+                    <circle cx="100" cy="100" r="50" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" />
+                    <circle cx="100" cy="100" r="30" stroke="currentColor" stroke-width="1.5" />
+                    <circle cx="100" cy="100" r="10" fill="currentColor" />
+                    <path d="M 30 100 A 70 70 0 0 1 170 100" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" />
+                    <path d="M 10 100 A 90 90 0 0 1 190 100" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" />
+                </svg>
+            </div>
+
+            <!-- TOP NAVBAR -->
+            <header
+                class="h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-6 md:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+                <div class="flex items-center space-x-3">
+                    <button onclick="toggleSidebar()"
+                        class="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none">
+                        <i class="fa-solid fa-bars text-lg"></i>
+                    </button>
+                    <!-- Global Search Input -->
+                    <div class="relative w-52 sm:w-80 md:w-96">
+                        <span
+                            class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        </span>
+                        <input type="text" id="globalSearch" placeholder="Cari pelanggan, ID keluhan, No HP..."
+                            class="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl focus:ring-2 focus:ring-emerald-500 dark:text-slate-100 placeholder-slate-400 transition-all outline-none">
+                    </div>
+                </div>
+
+                <!-- Right Header Actions -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <div
+                        class="hidden sm:flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 text-xs font-medium">
+                        <span class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span>WiFi Desa Sodong (Online)</span>
+                    </div>
+
+                    <!-- Theme Toggle -->
+                    <button onclick="toggleTheme()"
+                        class="p-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                        title="Ubah Tema">
+                        <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                    </button>
+
+                    <!-- Notifications Button -->
+                    <button onclick="showToast('42 Tagihan belum terbayar & 5 Keluhan baru', 'info')"
+                        class="relative p-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                        title="Notifikasi">
+                        <i class="fa-regular fa-bell text-sm"></i>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full"></span>
+                    </button>
+
+                    <div class="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
+
+                    <!-- Admin Profile -->
+                    <div
+                        class="flex items-center space-x-2.5 cursor-pointer p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100"
+                            alt="Avatar Admin"
+                            class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700">
+                        <div class="hidden md:block text-left pr-1">
+                            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-tight">admin</p>
+                            <p class="text-[10px] text-slate-400 leading-tight">BTS Sodong Net</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 hidden md:block"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- MAIN CONTENT VIEWS CONTAINER -->
+            <main class="flex-1 p-4 sm:p-6 lg:p-8 w-full space-y-6 relative z-10">
+
+                <!-- PAGE 1: DASHBOARD VIEW -->
+                <div id="page-dashboard" class="space-y-6">
+
+                    <!-- WELCOME HERO BANNER -->
+                    <div
+                        class="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 p-6 sm:p-7 rounded-2xl border border-slate-800 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+                        <div class="relative z-10 space-y-2 max-w-xl">
+                            <span
+                                class="px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                SISTEM MANAGEMENT TERPADU V2.0
+                            </span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-2">
+                                Selamat Datang di Portal BTS SODONG NET
+                            </h2>
+                            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                Kelola data pelanggan, pantau tagihan bulanan, serta monitoring status jaringan OLT
+                                secara real-time.
+                            </p>
+                            <div class="pt-2 flex flex-wrap items-center gap-3">
+                                <button onclick="switchPage('keluhan', document.getElementById('nav-keluhan'))"
+                                    class="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center space-x-2">
+                                    <span>Lihat Laporan Keluhan</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                                <button onclick="switchPage('pelanggan', document.getElementById('nav-pelanggan'))"
+                                    class="px-4 py-2 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl transition-all">
+                                    Kelola Pelanggan
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Right Banner Decorative Graphic -->
+                        <div class="relative z-10 shrink-0 hidden md:block">
+                            <div
+                                class="w-36 h-28 rounded-2xl bg-slate-800/80 border border-slate-700/80 p-4 backdrop-blur-md flex flex-col justify-between shadow-lg">
+                                <div class="flex items-center justify-between text-xs text-emerald-400 font-bold">
+                                    <span>OLT MAIN</span>
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400">Total Bandwidth</p>
+                                    <p class="text-lg font-extrabold text-white">1 Gbps</p>
+                                </div>
+                                <p class="text-[10px] text-emerald-400">Up-time 99.98%</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4 METRIC CARDS -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div
+                            class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/40">
+                                    <i class="fa-solid fa-users text-base"></i>
+                                </div>
+                                <span
+                                    class="px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/60 rounded-md">+12%
+                                    bln ini</span>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900 dark:text-white">248</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Pelanggan Aktif
+                                </p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/40">
+                                    <i class="fa-solid fa-wallet text-base"></i>
+                                </div>
+                                <span
+                                    class="px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/60 rounded-md">+5.4%</span>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Rp 12.5M</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Omset Pembayaran Bulan
+                                    Ini</p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-100 dark:border-amber-900/40">
+                                    <i class="fa-solid fa-file-invoice-dollar text-base"></i>
+                                </div>
+                                <span
+                                    class="px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900/60 rounded-md">Jatuh
+                                    Tempo</span>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900 dark:text-white">42</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Tagihan Belum Dibayar
+                                </p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-100 dark:border-teal-900/40">
+                                    <i class="fa-solid fa-server text-base"></i>
+                                </div>
+                                <span
+                                    class="px-2 py-0.5 text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-900/60 rounded-md">Uptime
+                                    99.9%</span>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Normal</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Status OLT Utama Desa
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DASHBOARD INSIGHTS & REVENUE CHART PREVIEW -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div
+                            class="lg:col-span-2 bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+                            <div
+                                class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-3">
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Grafik Pendapatan
+                                        Iuran Internet</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Ringkasan pembayaran 6 bulan
+                                        terakhir</p>
+                                </div>
+                                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Tahun
+                                    2026</span>
+                            </div>
+
+                            <!-- Visual Chart Bar Representation -->
+                            <div class="h-48 flex items-end justify-between gap-3 pt-6 px-2">
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div
+                                        class="w-full bg-emerald-500/20 rounded-t-lg h-24 hover:bg-emerald-500/40 transition-all relative group">
+                                        <div
+                                            class="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                            9.8M</div>
+                                    </div>
+                                    <span class="text-[11px] text-slate-400">Mar</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div
+                                        class="w-full bg-emerald-500/30 rounded-t-lg h-28 hover:bg-emerald-500/50 transition-all relative group">
+                                        <div
+                                            class="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                            10.2M</div>
+                                    </div>
+                                    <span class="text-[11px] text-slate-400">Apr</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div
+                                        class="w-full bg-emerald-500/40 rounded-t-lg h-32 hover:bg-emerald-500/60 transition-all relative group">
+                                        <div
+                                            class="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                            11.0M</div>
+                                    </div>
+                                    <span class="text-[11px] text-slate-400">Mei</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div
+                                        class="w-full bg-emerald-500/60 rounded-t-lg h-36 hover:bg-emerald-500/80 transition-all relative group">
+                                        <div
+                                            class="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                            11.8M</div>
+                                    </div>
+                                    <span class="text-[11px] text-slate-400">Jun</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div
+                                        class="w-full bg-emerald-500/80 rounded-t-lg h-40 hover:bg-emerald-500 transition-all relative group">
+                                        <div
+                                            class="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                            12.1M</div>
+                                    </div>
+                                    <span class="text-[11px] text-slate-400">Jul</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div
+                                        class="w-full bg-emerald-600 rounded-t-lg h-44 hover:bg-emerald-500 transition-all relative group shadow-md shadow-emerald-600/30">
+                                        <div
+                                            class="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                            12.5M</div>
+                                    </div>
+                                    <span class="text-[11px] text-slate-800 dark:text-slate-200 font-bold">Agt</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Internet Distribution Breakdown -->
+                        <div
+                            class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4 flex flex-col justify-between">
+                            <div>
+                                <h3
+                                    class="text-base font-bold text-slate-900 dark:text-white border-b border-slate-200/80 dark:border-slate-800 pb-3">
+                                    Distribusi Paket Pelanggan</h3>
+
+                                <div class="space-y-3 mt-4 text-xs">
+                                    <div>
+                                        <div
+                                            class="flex justify-between font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                            <span>Paket Home 10 Mbps</span>
+                                            <span>140 Pelanggan (56%)</span>
+                                        </div>
+                                        <div
+                                            class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                            <div class="h-full bg-emerald-500 rounded-full" style="width: 56%;"></div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div
+                                            class="flex justify-between font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                            <span>Paket Home 20 Mbps</span>
+                                            <span>85 Pelanggan (34%)</span>
+                                        </div>
+                                        <div
+                                            class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                            <div class="h-full bg-teal-500 rounded-full" style="width: 34%;"></div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div
+                                            class="flex justify-between font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                            <span>Paket Dedicated Bisnis</span>
+                                            <span>23 Pelanggan (10%)</span>
+                                        </div>
+                                        <div
+                                            class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                            <div class="h-full bg-sky-500 rounded-full" style="width: 10%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="switchPage('pelanggan', document.getElementById('nav-pelanggan'))"
+                                class="w-full py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 rounded-xl transition-colors border border-emerald-200/60 dark:border-emerald-900/60">
+                                Lihat Semua Data Pelanggan &rarr;
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- PAGE 2: DATA PELANGGAN VIEW -->
+                <div id="page-pelanggan" class="space-y-6 hidden">
+
+                    <!-- HEADER CARD PELANGGAN -->
+                    <div
+                        class="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 p-5 sm:p-6 rounded-2xl border border-slate-800 text-white shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div class="flex items-start space-x-4">
+                            <div
+                                class="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20 backdrop-blur-sm shrink-0">
+                                <i class="fa-solid fa-users text-2xl"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-3">
+                                    <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Data Pelanggan
+                                        Internet</h2>
+                                    <span
+                                        class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">248
+                                        Total</span>
+                                </div>
+                                <p class="text-xs sm:text-sm text-slate-300 mt-1">Kelola data seluruh pelanggan BUMDes
+                                    Tirta Sejahtera Desa Sodong.</p>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex items-center space-x-2.5">
+                            <select
+                                class="px-3 py-2 text-xs bg-slate-800/90 text-slate-200 border border-slate-700 rounded-xl outline-none">
+                                <option>Semua Paket</option>
+                                <option>Home 10 Mbps</option>
+                                <option>Home 20 Mbps</option>
+                            </select>
+                            <button onclick="showToast('Ekspor data Excel berhasil diunduh', 'success')"
+                                class="px-3.5 py-2 text-xs font-semibold text-slate-200 bg-slate-800/90 hover:bg-slate-700 border border-slate-700 rounded-xl transition-colors flex items-center space-x-2">
+                                <i class="fa-solid fa-file-excel text-emerald-400"></i>
+                                <span>Export Excel</span>
+                            </button>
+                            <button onclick="openModal('modalPelanggan')"
+                                class="px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 rounded-xl transition-all shadow-sm shadow-emerald-600/20 flex items-center space-x-2">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                                <span>+ Tambah Pelanggan</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TABLE CONTAINER PELANGGAN -->
+                    <div
+                        class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+                        <div
+                            class="p-4 sm:p-5 border-b border-slate-200/80 dark:border-slate-800 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+                            <div class="flex items-center space-x-2">
+                                <button
+                                    class="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-emerald-600 text-white shadow-xs">Semua
+                                    Status (248)</button>
+                                <button
+                                    class="px-3.5 py-1.5 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">Aktif
+                                    (238)</button>
+                                <button
+                                    class="px-3.5 py-1.5 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">Isolir
+                                    / Nonaktif (10)</button>
+                            </div>
+                            <div class="relative sm:w-72">
+                                <span
+                                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                                </span>
+                                <input type="text" placeholder="Cari nama atau ID pelanggan..."
+                                    class="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr
+                                        class="bg-slate-100/80 dark:bg-slate-800/60 border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        <th class="py-3.5 px-4 sm:px-6">ID / NAMA PELANGGAN</th>
+                                        <th class="py-3.5 px-4 sm:px-6">PAKET INTERNET</th>
+                                        <th class="py-3.5 px-4 sm:px-6">ALAMAT / WILAYAH</th>
+                                        <th class="py-3.5 px-4 sm:px-6">NO TELEPON</th>
+                                        <th class="py-3.5 px-4 sm:px-6">STATUS</th>
+                                        <th class="py-3.5 px-4 sm:px-6 text-center">AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200/80 dark:divide-slate-800/70 text-xs sm:text-sm">
+                                    <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                                        <td class="py-3.5 px-4 sm:px-6 font-semibold text-slate-900 dark:text-white">
+                                            Laurensius Suban Ola
+                                            <span
+                                                class="block text-[11px] font-normal text-emerald-600 dark:text-emerald-400">PLG-001</span>
+                                        </td>
+                                        <td class="py-3.5 px-4 sm:px-6 font-medium text-slate-700 dark:text-slate-300">
+                                            VOUCHER RUMAHAN (20 Mbps)</td>
+                                        <td class="py-3.5 px-4 sm:px-6 text-slate-500 dark:text-slate-400">Jalan
+                                            Sulaksana No.16</td>
+                                        <td class="py-3.5 px-4 sm:px-6 text-slate-600 dark:text-slate-300">081395445565
+                                        </td>
+                                        <td class="py-3.5 px-4 sm:px-6"><span
+                                                class="px-2.5 py-0.5 text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 rounded-full">•
+                                                Aktif</span></td>
+                                        <td class="py-3.5 px-4 sm:px-6 text-center">
+                                            <button onclick="openAdminDetailKeluhanPage('KLH-2026-001')"
+                                                class="p-1.5 text-slate-400 hover:text-emerald-600 transition-colors"
+                                                title="Lihat Profil">
+                                                <i class="fa-regular fa-eye text-xs"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                                        <td class="py-3.5 px-4 sm:px-6 font-semibold text-slate-900 dark:text-white">
+                                            Ahmad Risky
+                                            <span
+                                                class="block text-[11px] font-normal text-emerald-600 dark:text-emerald-400">PLG-002</span>
+                                        </td>
+                                        <td class="py-3.5 px-4 sm:px-6 font-medium text-slate-700 dark:text-slate-300">
+                                            HOME FAMILY (10 Mbps)</td>
+                                        <td class="py-3.5 px-4 sm:px-6 text-slate-500 dark:text-slate-400">RT 04 / RW 02
+                                            Desa Sodong</td>
+                                        <td class="py-3.5 px-4 sm:px-6 text-slate-600 dark:text-slate-300">081288990011
+                                        </td>
+                                        <td class="py-3.5 px-4 sm:px-6"><span
+                                                class="px-2.5 py-0.5 text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 rounded-full">•
+                                                Aktif</span></td>
+                                        <td class="py-3.5 px-4 sm:px-6 text-center">
+                                            <button
+                                                onclick="showToast('Membuka profil pelanggan Ahmad Risky...', 'info')"
+                                                class="p-1.5 text-slate-400 hover:text-emerald-600 transition-colors"
+                                                title="Lihat Profil">
+                                                <i class="fa-regular fa-eye text-xs"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- PAGE 3: KELUHAN PELANGGAN VIEW -->
+                <div id="page-keluhan" class="space-y-6 hidden">
+
+                    <!-- PAGE HEADER -->
+                    <div
+                        class="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 p-5 sm:p-6 rounded-2xl border border-slate-800 text-white shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div class="flex items-start space-x-4">
+                            <div
+                                class="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20 backdrop-blur-sm shrink-0">
+                                <i class="fa-regular fa-comment-dots text-2xl"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-3">
+                                    <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Daftar Keluhan
+                                        Pelanggan</h2>
+                                    <span
+                                        class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                                        id="totalCountBadge">5 Data</span>
+                                </div>
+                                <p class="text-xs sm:text-sm text-slate-300 mt-1">Kelola dan selesaikan laporan gangguan
+                                    jaringan pelanggan BTS Sodong Net.</p>
+                            </div>
+                        </div>
+
+                        <!-- Actions Buttons -->
+                        <div class="flex items-center space-x-2.5 self-start md:self-auto">
+                            <button onclick="toggleEmptyState()"
+                                class="px-3.5 py-2 text-xs font-semibold text-slate-200 bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 rounded-xl transition-colors shadow-xs flex items-center space-x-2">
+                                <i class="fa-solid fa-arrows-rotate text-slate-400"></i>
+                                <span id="stateToggleText">Simulasi Data Kosong</span>
+                            </button>
+                            <button onclick="openModal('modalTambah')"
+                                class="px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 rounded-xl transition-all shadow-sm shadow-emerald-600/20 flex items-center space-x-2">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                                <span>Buat Laporan Baru</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- MAIN TABLE CONTAINER -->
+                    <div
+                        class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+
+                        <!-- FILTER BAR & CONTROLS -->
+                        <div
+                            class="p-4 sm:p-5 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+
+                            <!-- Filter Tabs -->
+                            <div class="flex items-center space-x-1 sm:space-x-2 overflow-x-auto pb-1 lg:pb-0"
+                                id="filterTabs">
+                                <button onclick="setFilterTab('ALL')" id="tab-ALL"
+                                    class="tab-btn px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-emerald-600 text-white shadow-xs transition-all flex items-center space-x-2 shrink-0">
+                                    <span>Semua Status</span>
+                                    <span class="bg-emerald-700/80 text-white px-1.5 py-0.2 text-[10px] rounded-md"
+                                        id="cnt-ALL">5</span>
+                                </button>
+                                <button onclick="setFilterTab('BARU')" id="tab-BARU"
+                                    class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all flex items-center space-x-2 shrink-0">
+                                    <span>Baru</span>
+                                    <span
+                                        class="bg-amber-500/10 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-1.5 py-0.2 text-[10px] rounded-md font-semibold"
+                                        id="cnt-BARU">1</span>
+                                </button>
+                                <button onclick="setFilterTab('PROSES')" id="tab-PROSES"
+                                    class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all flex items-center space-x-2 shrink-0">
+                                    <span>Dalam Proses</span>
+                                    <span
+                                        class="bg-sky-500/10 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-500/20 px-1.5 py-0.2 text-[10px] rounded-md font-semibold"
+                                        id="cnt-PROSES">1</span>
+                                </button>
+                                <button onclick="setFilterTab('SELESAI')" id="tab-SELESAI"
+                                    class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all flex items-center space-x-2 shrink-0">
+                                    <span>Selesai</span>
+                                    <span
+                                        class="bg-emerald-500/10 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.2 text-[10px] rounded-md font-semibold"
+                                        id="cnt-SELESAI">3</span>
+                                </button>
+                            </div>
+
+                            <!-- Search & Tools -->
+                            <div class="flex items-center gap-2.5">
+                                <div class="relative flex-1 sm:w-72 lg:w-80">
+                                    <span
+                                        class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                                    </span>
+                                    <input type="text" id="tableSearch" onkeyup="renderTable()"
+                                        placeholder="Cari nama, ID, atau judul keluhan..."
+                                        class="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 dark:text-slate-100 placeholder-slate-400 transition-all outline-none">
+                                </div>
+                                <button onclick="resetFilters()" title="Reset Filter"
+                                    class="p-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <!-- TABLE CONTENT -->
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr
+                                        class="bg-slate-100/80 dark:bg-slate-800/60 border-b border-slate-200/90 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        <th class="py-3.5 px-4 sm:px-6">Kode Keluhan</th>
+                                        <th class="py-3.5 px-4 sm:px-6">Nama Pelanggan</th>
+                                        <th class="py-3.5 px-4 sm:px-6">Paket</th>
+                                        <th class="py-3.5 px-4 sm:px-6">Kategori Gangguan</th>
+                                        <th class="py-3.5 px-4 sm:px-6">Judul / Detail Ringkas</th>
+                                        <th class="py-3.5 px-4 sm:px-6">Tanggal Lapor</th>
+                                        <th class="py-3.5 px-4 sm:px-6">Status</th>
+                                        <th class="py-3.5 px-4 sm:px-6 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody"
+                                    class="divide-y divide-slate-200/80 dark:divide-slate-800/70 text-xs sm:text-sm">
+                                    <!-- Dynamic Rows via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- EMPTY DATA STATE -->
+                        <div id="emptyState" class="hidden py-16 px-4 text-center">
+                            <div
+                                class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-200/60 dark:border-slate-700/60">
+                                <i class="fa-regular fa-folder-open text-2xl"></i>
+                            </div>
+                            <h4 class="text-base font-bold text-slate-800 dark:text-slate-200">Data Tidak Ditemukan</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1">Belum ada data
+                                keluhan pelanggan untuk kriteria atau status yang Anda pilih.</p>
+                            <button onclick="resetFilters()"
+                                class="mt-4 inline-flex items-center space-x-2 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 border border-emerald-200/60 dark:border-emerald-900/60 rounded-xl transition-colors">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                                <span>Reset Filter & Pencarian</span>
+                            </button>
+                        </div>
+
+                        <!-- TABLE FOOTER & PAGINATION -->
+                        <div
+                            class="px-4 sm:px-6 py-4 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <p class="text-xs text-slate-500 dark:text-slate-400 text-center sm:text-left"
+                                id="paginationInfo">
+                                Menampilkan 1 - 5 dari 5 keluhan
+                            </p>
+
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400">
+                                    <span>Tampilkan:</span>
+                                    <select
+                                        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-emerald-500 text-xs font-medium text-slate-700 dark:text-slate-300">
+                                        <option>10 Baris</option>
+                                        <option>25 Baris</option>
+                                        <option>50 Baris</option>
+                                    </select>
+                                </div>
+
+                                <div class="flex items-center space-x-1">
+                                    <button
+                                        class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40"
+                                        disabled>
+                                        <i class="fa-solid fa-chevron-left text-xs px-1"></i>
+                                    </button>
+                                    <button
+                                        class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-medium text-xs flex items-center justify-center">1</button>
+                                    <button
+                                        class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40"
+                                        disabled>
+                                        <i class="fa-solid fa-chevron-right text-xs px-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- PAGE 4: FULL-VIEW DETAIL KELUHAN ADMIN PAGE -->
+                <div id="page-detail-keluhan" class="space-y-6 hidden">
+
+                    <!-- TOP HEADER BANNER WITH COMPLAINTS GRAPHIC -->
+                    <div
+                        class="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 p-5 sm:p-7 rounded-2xl border border-slate-800 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+
+                        <!-- Left Content & Back Button -->
+                        <div class="relative z-10 space-y-3 max-w-2xl">
+                            <div class="flex items-center space-x-3">
+                                <button onclick="switchPage('keluhan', document.getElementById('nav-keluhan'))"
+                                    class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+                                    title="Kembali ke Daftar">
+                                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                                </button>
+                                <div class="flex items-center space-x-2.5">
+                                    <h2 class="text-xl sm:text-2xl font-extrabold text-white tracking-tight"
+                                        id="admDetailHeaderId">Detail Keluhan #KLH-2026-001</h2>
+                                    <span
+                                        class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 uppercase"
+                                        id="admDetailHeaderBadge">MENUNGGU</span>
+                                </div>
+                            </div>
+                            <p class="text-xs sm:text-sm text-slate-300 flex items-center gap-2">
+                                <i class="fa-regular fa-clock text-emerald-400"></i>
+                                <span>Tanggal Masuk Laporan: <strong class="text-white font-semibold"
+                                        id="admDetailHeaderTime">06 August 2026, 00:39 WIB</strong></span>
+                            </p>
+                        </div>
+
+                        <!-- Right Actions & Complaint Vector Graphic -->
+                        <div
+                            class="relative z-10 flex items-center space-x-4 self-stretch md:self-auto justify-between md:justify-end">
+                            <button
+                                onclick="showToast('Menghubungi whatsapp pelanggan Laurensius Suban Ola...', 'info')"
+                                class="px-4 py-2.5 text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all shadow-md shadow-emerald-600/30 flex items-center space-x-2 shrink-0">
+                                <i class="fa-brands fa-whatsapp text-sm"></i>
+                                <span>Hubungi Pelanggan</span>
+                            </button>
+
+                            <!-- TROUBLESHOOTING / COMPLAINTS SUPPORT SVG GRAPHIC -->
+                            <div class="w-32 h-20 relative shrink-0 hidden lg:block opacity-90">
+                                <svg class="w-full h-full text-emerald-400" viewBox="0 0 160 100" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="10" y="15" width="140" height="70" rx="12" fill="#0f172a" stroke="#10b981"
+                                        stroke-width="1.5" stroke-dasharray="4 4" />
+                                    <circle cx="50" cy="50" r="18" fill="#1e293b" stroke="#34d399" stroke-width="2" />
+                                    <path d="M 45 45 L 55 55 M 55 45 L 45 55" stroke="#38bdf8" stroke-width="2.5"
+                                        stroke-linecap="round" />
+                                    <path d="M 85 35 A 25 25 0 0 1 125 35" stroke="#f59e0b" stroke-width="2.5"
+                                        stroke-linecap="round" />
+                                    <path d="M 92 45 A 15 15 0 0 1 118 45" stroke="#10b981" stroke-width="2"
+                                        stroke-linecap="round" />
+                                    <circle cx="105" cy="58" r="3.5" fill="#38bdf8" />
+                                </svg>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- STEPPER: STATUS PENANGANAN LAPORAN -->
+                    <div
+                        class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Status Penanganan Laporan
+                        </h4>
+
+                        <div class="relative py-2">
+                            <div
+                                class="absolute top-1/2 left-6 right-6 -translate-y-1/2 h-1 bg-slate-200 dark:bg-slate-800 z-0">
+                            </div>
+
+                            <div class="relative z-10 grid grid-cols-3 text-center">
+                                <div class="flex flex-col items-center space-y-2">
+                                    <div
+                                        class="w-9 h-9 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center ring-4 ring-emerald-100 dark:ring-emerald-950/80 shadow-md">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-100">1. Menunggu</p>
+                                        <p class="text-[10px] text-slate-400">Laporan Diterima System</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col items-center space-y-2">
+                                    <div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 font-bold text-sm flex items-center justify-center ring-4 ring-slate-100 dark:ring-slate-900"
+                                        id="step2Icon">
+                                        <i class="fa-solid fa-wrench"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-600 dark:text-slate-400" id="step2Title">
+                                            2. Diproses</p>
+                                        <p class="text-[10px] text-slate-400">Teknisi Pengecekan Lapangan</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col items-center space-y-2">
+                                    <div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 font-bold text-sm flex items-center justify-center ring-4 ring-slate-100 dark:ring-slate-900"
+                                        id="step3Icon">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-600 dark:text-slate-400" id="step3Title">
+                                            3. Selesai</p>
+                                        <p class="text-[10px] text-slate-400">Kendala Teratasi</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2 COLUMNS: PELANGGAN & DETAIL LAPORAN KENDALA -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                        <!-- LEFT CARD: PELANGGAN & LAYANAN -->
+                        <div
+                            class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+                            <div
+                                class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-3">
+                                <div class="flex items-center space-x-2.5">
+                                    <div
+                                        class="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
+                                        <i class="fa-solid fa-user-gear text-sm"></i>
+                                    </div>
+                                    <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Pelanggan
+                                        & Layanan</h3>
+                                </div>
+                                <span
+                                    class="px-2.5 py-0.5 text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 rounded-full">Pelanggan
+                                    Aktif</span>
+                            </div>
+
+                            <div class="space-y-3 text-xs sm:text-sm">
+                                <div
+                                    class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-700/60 flex items-center space-x-3">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-emerald-600 text-white font-bold flex items-center justify-center shrink-0">
+                                        LS
+                                    </div>
+                                    <div>
+                                        <p class="text-[11px] text-slate-400 font-medium">NAMA PELANGGAN</p>
+                                        <p class="font-bold text-slate-900 dark:text-white text-sm"
+                                            id="admDetailPelangganNama">Laurensius Suban Ola</p>
+                                        <p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold"
+                                            id="admDetailPelangganId">ID: PLG-001</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div
+                                        class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                                        <p class="text-[11px] text-slate-400 font-medium">NO. WHATSAPP</p>
+                                        <p class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5"
+                                            id="admDetailWa">081395445565</p>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                                        <p class="text-[11px] text-slate-400 font-medium">KODE VOUCHER / ID</p>
+                                        <p class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">VCH-HARI-001
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                                    <p class="text-[11px] text-slate-400 font-medium">ALAMAT PEMASANGAN</p>
+                                    <p class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5"><i
+                                            class="fa-solid fa-location-dot text-rose-500 mr-1.5"></i>Jalan Sulaksana
+                                        No.16, RT 02 / RW 01 Desa Sodong</p>
+                                </div>
+
+                                <div
+                                    class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-between">
+                                    <div>
+                                        <p class="text-[11px] text-emerald-700 dark:text-emerald-300 font-bold uppercase"
+                                            id="admDetailPaketNama">VOUCHER RUMAHAN</p>
+                                        <p class="text-xs text-slate-600 dark:text-slate-300">Kecepatan 20 Mbps • 4
+                                            Perangkat</p>
+                                    </div>
+                                    <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400">Rp
+                                        120.000<span class="text-[10px] font-normal text-slate-400">/bln</span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT CARD: DETAIL LAPORAN KENDALA -->
+                        <div
+                            class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4 flex flex-col justify-between">
+                            <div class="space-y-4">
+                                <div
+                                    class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-3">
+                                    <div class="flex items-center space-x-2.5">
+                                        <div
+                                            class="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40">
+                                            <i class="fa-regular fa-comment-dots text-sm"></i>
+                                        </div>
+                                        <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Detail
+                                            Laporan Kendala</h3>
+                                    </div>
+                                    <span
+                                        class="px-2.5 py-0.5 text-[10px] font-bold uppercase rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                                        id="admDetailKategoriBadge">TAGIHAN & PEMBAYARAN</span>
+                                </div>
+
+                                <div>
+                                    <p class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">JUDUL
+                                        MASALAH</p>
+                                    <h4 class="text-base font-bold text-slate-900 dark:text-white mt-1"
+                                        id="admDetailJudul">Internet Mati Dari Semalam</h4>
+                                </div>
+
+                                <div>
+                                    <p class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">DESKRIPSI
+                                        KENDALA DARI PELANGGAN</p>
+                                    <div
+                                        class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 mt-1 italic text-slate-700 dark:text-slate-200 text-xs sm:text-sm leading-relaxed relative">
+                                        <i
+                                            class="fa-solid fa-quote-left text-slate-300 dark:text-slate-700 text-xl absolute top-2 right-3"></i>
+                                        "<span id="admDetailDeskripsi">Dari semalam internet mati min, mohon dicek kabel
+                                            fiber optik depan rumah.</span>"
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="p-3.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-2">
+                                <i class="fa-solid fa-circle-info text-emerald-500"></i>
+                                <span>Pastikan menindaklanjuti keluhan dan mengupdate status pengerjaan untuk
+                                    pelanggan.</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- BOTTOM CARD: PANEL PENANGANAN ADMIN & RIWAYAT -->
+                    <div
+                        class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-5">
+
+                        <div
+                            class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-3">
+                            <div class="flex items-center space-x-2.5">
+                                <div
+                                    class="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
+                                    <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Panel
+                                        Penanganan Admin</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Update status & beri instruksi
+                                        teknikal</p>
+                                </div>
+                            </div>
+                            <span
+                                class="text-xs font-semibold px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg">Petugas:
+                                Admin BUMDes</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                            <!-- Left: Form Penanganan -->
+                            <form onsubmit="handleAdminDetailSubmit(event)" class="lg:col-span-2 space-y-4">
+                                <div>
+                                    <label
+                                        class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Status
+                                        Penanganan Laporan</label>
+                                    <select id="admInputStatus"
+                                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-semibold text-slate-800 dark:text-slate-100">
+                                        <option value="BARU">Menunggu (Laporan Diterima)</option>
+                                        <option value="PROSES">Diproses (Teknisi Pengecekan)</option>
+                                        <option value="SELESAI">Selesai (Kendala Teratasi)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label
+                                        class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Catatan
+                                        Admin / Solusi Kendala</label>
+                                    <textarea id="admInputSolusi" rows="3"
+                                        placeholder="Tuliskan tindakan teknis yang dilakukan atau instruksi untuk pelanggan..."
+                                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 dark:text-slate-100"></textarea>
+                                </div>
+
+                                <div class="flex justify-end pt-2">
+                                    <button type="submit"
+                                        class="px-5 py-2.5 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center space-x-2">
+                                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                                        <span>Simpan Perubahan Status</span>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- Right: Timeline Riwayat -->
+                            <div
+                                class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-3">
+                                <h4
+                                    class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                                    Riwayat Aktivitas Laporan</h4>
+
+                                <div class="space-y-3 text-xs">
+                                    <div class="flex items-start space-x-2.5">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-1.5"></span>
+                                        <div>
+                                            <p class="font-bold text-slate-800 dark:text-slate-200">Laporan Dikirim
+                                                Pelanggan</p>
+                                            <p class="text-[10px] text-slate-400">06 August 2026, 00:39 WIB • Aplikasi
+                                                Mobile</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start space-x-2.5">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0 mt-1.5"></span>
+                                        <div>
+                                            <p class="font-bold text-slate-800 dark:text-slate-200">Tiket Otomatis
+                                                Dibuat (#KLH-0001)</p>
+                                            <p class="text-[10px] text-slate-400">06 August 2026, 00:40 WIB • System
+                                                Auto</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start space-x-2.5">
+                                        <span class="w-2 h-2 rounded-full bg-slate-400 shrink-0 mt-1.5"></span>
+                                        <div>
+                                            <p class="font-bold text-slate-600 dark:text-slate-400">Menunggu Tindakan
+                                                Admin</p>
+                                            <p class="text-[10px] text-slate-400">Status Saat Ini</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- PAGE 5: GENERAL PLACEHOLDER VIEW (FOR OTHER MENUS) -->
+                <div id="page-generic" class="space-y-6 hidden">
+                    <div
+                        class="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs text-center max-w-lg mx-auto my-12">
+                        <div class="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-100 dark:border-emerald-900/40"
+                            id="genericIcon">
+                            <i class="fa-solid fa-layer-group text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white" id="genericTitle">Modul Aplikasi
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5" id="genericDesc">Modul ini siap
+                            dikoneksikan dengan database server BTS Sodong Net.</p>
+                        <button onclick="switchPage('dashboard', document.getElementById('nav-dashboard'))"
+                            class="mt-5 px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition-all shadow-sm">
+                            &larr; Kembali ke Dashboard
+                        </button>
+                    </div>
+                </div>
+
+            </main>
+
+            <footer
+                class="mt-auto py-4 px-6 sm:px-8 border-t border-slate-200/80 dark:border-slate-800/80 text-center text-xs text-slate-400 bg-white/50 dark:bg-slate-900/50">
+                <p>&copy; 2026 BUMDes Tirta Sejahtera - BTS SODONG NET. All Rights Reserved.</p>
+            </footer>
+
+        </div>
+    </div>
+
+    <!-- MODAL 1: BUAT LAPORAN BARU -->
+    <div id="modalTambah"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs hidden">
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 transform transition-all">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Buat Laporan Keluhan Baru</h3>
+                <button onclick="closeModal('modalTambah')"
+                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleFormTambahSubmit(event)" class="mt-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Pilih
+                        Pelanggan</label>
+                    <select id="inputPelanggan"
+                        class="w-full px-3.5 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="Laurensius Suban Ola|VOUCHER RUMAHAN">Laurensius Suban Ola (PLG-001) - Voucher
+                            Rumahan</option>
+                        <option value="Budi Santoso|HOME FAMILY">Budi Santoso (PLG-002) - Home Family</option>
+                        <option value="Siti Aminah|DEDICATED 20M">Siti Aminah (PLG-003) - Dedicated 20M</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori
+                            Kendala</label>
+                        <select id="inputKategori"
+                            class="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="Koneksi Putus">Koneksi Putus</option>
+                            <option value="Lambat / Lemot">Lambat / Lemot</option>
+                            <option value="Kabel FO Putus">Kabel FO Putus</option>
+                            <option value="Modul OLT Down">Modul OLT Down</option>
+                            <option value="Tagihan & Invoice">Tagihan & Invoice</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Status
+                            Awal</label>
+                        <select id="inputStatusAwal"
+                            class="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-semibold">
+                            <option value="BARU">Baru (Menunggu)</option>
+                            <option value="PROSES">Dalam Proses</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Judul Ringkas
+                        Kendala</label>
+                    <input type="text" id="inputJudul" required
+                        placeholder="Contoh: Router LOS kedip merah sejak jam 6 pagi"
+                        class="w-full px-3.5 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('modalTambah')"
+                        class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl">Batal</button>
+                    <button type="submit"
+                        class="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-sm">Simpan
+                        Laporan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: TAMBAH PELANGGAN BARU -->
+    <div id="modalPelanggan"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs hidden">
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 transform transition-all">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Tambah Pelanggan WiFi Baru</h3>
+                <button onclick="closeModal('modalPelanggan')"
+                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleFormPelangganSubmit(event)" class="mt-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap
+                        Pelanggan</label>
+                    <input type="text" required placeholder="Masukkan nama pelanggan"
+                        class="w-full px-3.5 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">No.
+                            WhatsApp</label>
+                        <input type="text" required placeholder="08xxxxxxxxxx"
+                            class="w-full px-3.5 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Pilihan
+                            Paket</label>
+                        <select
+                            class="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option>Home Family (10 Mbps)</option>
+                            <option>Voucher Rumahan (20 Mbps)</option>
+                            <option>Dedicated Bisnis (50 Mbps)</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Alamat Lengkap
+                        Pemasangan</label>
+                    <textarea rows="2" placeholder="RT / RW Desa Sodong"
+                        class="w-full px-3.5 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('modalPelanggan')"
+                        class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl">Batal</button>
+                    <button type="submit"
+                        class="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-sm">Simpan
+                        Data Pelanggan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast"
+        class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div id="toastContent"
+            class="flex items-center space-x-3 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 text-xs sm:text-sm">
+            <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span id="toastMessage">Pesan Notifikasi</span>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        // Data Structures
+        const initialData = [
+            { id: 'KLH-2026-001', nama: 'Laurensius Suban Ola', paket: 'Voucher Rumahan', kategori: 'Kabel FO Putus', judul: 'Kabel fiber optik putus tersambar dahan pohon', tanggal: '06 Aug 2026, 00:39', status: 'BARU' },
+            { id: 'KLH-2026-002', nama: 'Ahmad Risky', paket: 'Home Family', kategori: 'Lambat / Lemot', judul: 'Koneksi lemot di jam sibuk malam hari', tanggal: '05 Aug 2026, 21:15', status: 'PROSES' },
+            { id: 'KLH-2026-003', nama: 'Siti Aminah', paket: 'Dedicated 20M', kategori: 'Modul OLT Down', judul: 'Lampu indikator modem LOS berkedip merah', tanggal: '04 Aug 2026, 14:20', status: 'SELESAI' },
+            { id: 'KLH-2026-004', nama: 'Budi Santoso', paket: 'Voucher Rumahan', kategori: 'Tagihan & Invoice', judul: 'Sudah bayar iuran namun belum terupdate di system', tanggal: '03 Aug 2026, 09:10', status: 'SELESAI' },
+            { id: 'KLH-2026-005', nama: 'Dewi Lestari', paket: 'Home Family', kategori: 'Koneksi Putus', judul: 'Router mati total terkena petir', tanggal: '02 Aug 2026, 18:45', status: 'SELESAI' }
+        ];
+
+        let currentData = [...initialData];
+        let activeTabStatus = 'ALL';
+        let isSimulatingEmpty = false;
+
+        // View Switching System
+        function switchPage(pageId, navElement) {
+            document.querySelectorAll('#mainNav .nav-item').forEach(item => {
+                item.className = 'nav-item flex items-center justify-between px-3.5 py-2.5 text-sm font-medium rounded-xl text-slate-400 hover:bg-slate-900/80 hover:text-white transition-all';
+                const icon = item.querySelector('i');
+                if (icon) icon.className = icon.className.replace('text-emerald-400', 'text-slate-400');
+            });
+
+            if (navElement) {
+                navElement.className = 'nav-item active flex items-center justify-between px-3.5 py-2.5 text-sm font-medium rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition-all shadow-xs';
+                const icon = navElement.querySelector('i');
+                if (icon) icon.className = icon.className.replace('text-slate-400', 'text-emerald-400');
+            }
+
+            // Hide all pages
+            document.getElementById('page-dashboard').classList.add('hidden');
+            document.getElementById('page-pelanggan').classList.add('hidden');
+            document.getElementById('page-keluhan').classList.add('hidden');
+            document.getElementById('page-detail-keluhan').classList.add('hidden');
+            document.getElementById('page-generic').classList.add('hidden');
+
+            if (pageId === 'dashboard') {
+                document.getElementById('page-dashboard').classList.remove('hidden');
+            } else if (pageId === 'pelanggan') {
+                document.getElementById('page-pelanggan').classList.remove('hidden');
+            } else if (pageId === 'keluhan') {
+                document.getElementById('page-keluhan').classList.remove('hidden');
+                renderTable();
+            } else if (pageId === 'detail-keluhan') {
+                document.getElementById('page-detail-keluhan').classList.remove('hidden');
+            } else {
+                const generic = document.getElementById('page-generic');
+                const genericTitle = document.getElementById('genericTitle');
+                const genericDesc = document.getElementById('genericDesc');
+                const genericIcon = document.getElementById('genericIcon');
+
+                generic.classList.remove('hidden');
+
+                if (pageId === 'paket') {
+                    genericTitle.innerText = "Modul Paket Internet";
+                    genericDesc.innerText = "Pengaturan kecepatan bandwidth 1Gbps, batas kuota FUP, dan manajemen harga.";
+                    genericIcon.innerHTML = '<i class="fa-solid fa-network-wired text-2xl"></i>';
+                } else if (pageId === 'tagihan') {
+                    genericTitle.innerText = "Modul Tagihan & Invoice";
+                    genericDesc.innerText = "Daftar 42 pelanggan yang durasi penagihannya jatuh tempo bulan ini.";
+                    genericIcon.innerHTML = '<i class="fa-solid fa-file-invoice-dollar text-2xl"></i>';
+                } else if (pageId === 'struk') {
+                    genericTitle.innerText = "Modul Cetak Struk / POS Kasir";
+                    genericDesc.innerText = "Panel kasir cepat untuk mencetak bukti pembayaran iuran bulanan pelanggan.";
+                    genericIcon.innerHTML = '<i class="fa-solid fa-print text-2xl"></i>';
+                }
+            }
+
+            if (window.innerWidth < 1024) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        }
+
+        // Open Admin Detail Page
+        function openAdminDetailKeluhanPage(id) {
+            const item = currentData.find(i => i.id === id) || initialData[0];
+
+            document.getElementById('admDetailHeaderId').innerText = `Detail Keluhan #${item.id}`;
+            document.getElementById('admDetailPelangganNama').innerText = item.nama;
+            document.getElementById('admDetailPelangganId').innerText = `ID: PLG-00${item.id.slice(-2)}`;
+            document.getElementById('admDetailPaketNama').innerText = item.paket.toUpperCase();
+            document.getElementById('admDetailKategoriBadge').innerText = item.kategori.toUpperCase();
+            document.getElementById('admDetailJudul').innerText = item.judul;
+            document.getElementById('admDetailDeskripsi').innerText = item.judul;
+            document.getElementById('admInputStatus').value = item.status === 'BARU' ? 'BARU' : (item.status === 'PROSES' ? 'PROSES' : 'SELESAI');
+
+            const headerBadge = document.getElementById('admDetailHeaderBadge');
+            if (item.status === 'SELESAI') {
+                headerBadge.className = 'px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 uppercase';
+                headerBadge.innerText = 'SELESAI';
+            } else if (item.status === 'PROSES') {
+                headerBadge.className = 'px-2.5 py-0.5 text-xs font-bold rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/40 uppercase';
+                headerBadge.innerText = 'DIPROSES';
+            } else {
+                headerBadge.className = 'px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 uppercase';
+                headerBadge.innerText = 'MENUNGGU';
+            }
+
+            switchPage('detail-keluhan', document.getElementById('nav-keluhan'));
+        }
+
+        function handleAdminDetailSubmit(e) {
+            e.preventDefault();
+            const newStatus = document.getElementById('admInputStatus').value;
+            showToast(`Status keluhan berhasil diperbarui menjadi: ${newStatus}`, 'success');
+            setTimeout(() => {
+                switchPage('keluhan', document.getElementById('nav-keluhan'));
+            }, 800);
+        }
+
+        // Render Complaints Table Function
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            const searchKeyword = document.getElementById('tableSearch').value.toLowerCase();
+
+            tbody.innerHTML = '';
+
+            let filtered = currentData.filter(item => {
+                const matchesStatus = activeTabStatus === 'ALL' || item.status === activeTabStatus;
+                const matchesSearch = item.nama.toLowerCase().includes(searchKeyword) ||
+                    item.id.toLowerCase().includes(searchKeyword) ||
+                    item.judul.toLowerCase().includes(searchKeyword) ||
+                    item.kategori.toLowerCase().includes(searchKeyword);
+                return matchesStatus && matchesSearch;
+            });
+
+            updateTabCounts();
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                filtered.forEach(item => {
+                    let statusBadge = getStatusBadgeHTML(item.status);
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors';
+                    tr.innerHTML = `
+                        <td class="py-3.5 px-4 sm:px-6 font-semibold text-emerald-600 dark:text-emerald-400">${item.id}</td>
+                        <td class="py-3.5 px-4 sm:px-6 font-semibold text-slate-900 dark:text-white">${item.nama}</td>
+                        <td class="py-3.5 px-4 sm:px-6 text-slate-500 dark:text-slate-400 font-medium">${item.paket}</td>
+                        <td class="py-3.5 px-4 sm:px-6 text-slate-700 dark:text-slate-300 font-medium">${item.kategori}</td>
+                        <td class="py-3.5 px-4 sm:px-6 text-slate-600 dark:text-slate-300 max-w-xs truncate" title="${item.judul}">${item.judul}</td>
+                        <td class="py-3.5 px-4 sm:px-6 text-slate-500 dark:text-slate-400 text-xs">${item.tanggal}</td>
+                        <td class="py-3.5 px-4 sm:px-6">${statusBadge}</td>
+                        <td class="py-3.5 px-4 sm:px-6 text-center">
+                            <div class="flex items-center justify-center space-x-1.5">
+                                <button onclick="openAdminDetailKeluhanPage('${item.id}')" class="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Buka Detail Laporan">
+                                    <i class="fa-regular fa-eye text-xs"></i>
+                                </button>
+                                <button onclick="changeStatus('${item.id}')" class="p-1.5 text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Ubah Status Quick">
+                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('paginationInfo').innerText = `Menampilkan 1 - ${filtered.length} dari ${filtered.length} keluhan`;
+            document.getElementById('totalCountBadge').innerText = `${currentData.length} Data`;
+        }
+
+        function getStatusBadgeHTML(status) {
+            if (status === 'BARU') {
+                return `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900/60 inline-flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> BARU
+                        </span>`;
+            } else if (status === 'PROSES') {
+                return `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-900/60 inline-flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span> DIPROSES
+                        </span>`;
+            } else {
+                return `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/60 inline-flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> SELESAI
+                        </span>`;
+            }
+        }
+
+        function updateTabCounts() {
+            const cntAll = currentData.length;
+            const cntBaru = currentData.filter(i => i.status === 'BARU').length;
+            const cntProses = currentData.filter(i => i.status === 'PROSES').length;
+            const cntSelesai = currentData.filter(i => i.status === 'SELESAI').length;
+
+            document.getElementById('cnt-ALL').innerText = cntAll;
+            document.getElementById('cnt-BARU').innerText = cntBaru;
+            document.getElementById('cnt-PROSES').innerText = cntProses;
+            document.getElementById('cnt-SELESAI').innerText = cntSelesai;
+            document.getElementById('sidebarComplaintBadge').innerText = `${cntAll} Laporan`;
+        }
+
+        function setFilterTab(status) {
+            activeTabStatus = status;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn px-3.5 py-1.5 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all flex items-center space-x-2 shrink-0';
+            });
+
+            const activeBtn = document.getElementById(`tab-${status}`);
+            if (activeBtn) {
+                activeBtn.className = 'tab-btn px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-emerald-600 text-white shadow-xs transition-all flex items-center space-x-2 shrink-0';
+            }
+
+            renderTable();
+        }
+
+        function changeStatus(id) {
+            const item = currentData.find(i => i.id === id);
+            if (!item) return;
+
+            if (item.status === 'BARU') item.status = 'PROSES';
+            else if (item.status === 'PROSES') item.status = 'SELESAI';
+            else item.status = 'BARU';
+
+            renderTable();
+            showToast(`Status ${id} diperbarui menjadi ${item.status}`, 'success');
+        }
+
+        function resetFilters() {
+            activeTabStatus = 'ALL';
+            document.getElementById('tableSearch').value = '';
+            setFilterTab('ALL');
+        }
+
+        function toggleEmptyState() {
+            isSimulatingEmpty = !isSimulatingEmpty;
+            const stateBtnText = document.getElementById('stateToggleText');
+
+            if (isSimulatingEmpty) {
+                currentData = [];
+                stateBtnText.innerText = "Tampilkan Data Normal";
+                showToast('Simulasi data kosong diaktifkan', 'info');
+            } else {
+                currentData = [...initialData];
+                stateBtnText.innerText = "Simulasi Data Kosong";
+                showToast('Data normal dipulihkan', 'success');
+            }
+            renderTable();
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'fa-solid fa-moon text-sm';
+                showToast('Mode Terang Diaktifkan', 'info');
+            } else {
+                html.classList.add('dark');
+                icon.className = 'fa-solid fa-sun text-sm text-amber-400';
+                showToast('Mode Gelap Diaktifkan', 'info');
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function handleFormTambahSubmit(e) {
+            e.preventDefault();
+            const pelangganRaw = document.getElementById('inputPelanggan').value.split('|');
+            const kategori = document.getElementById('inputKategori').value;
+            const statusAwal = document.getElementById('inputStatusAwal').value;
+            const judul = document.getElementById('inputJudul').value;
+
+            const newId = `KLH-2026-00${currentData.length + 1}`;
+            const newItem = {
+                id: newId,
+                nama: pelangganRaw[0],
+                paket: pelangganRaw[1],
+                kategori: kategori,
+                judul: judul,
+                tanggal: 'Baru Saja',
+                status: statusAwal
+            };
+
+            currentData.unshift(newItem);
+            closeModal('modalTambah');
+            document.getElementById('inputJudul').value = '';
+            renderTable();
+            showToast(`Laporan keluhan ${newId} berhasil dibuat!`, 'success');
+        }
+
+        function handleFormPelangganSubmit(e) {
+            e.preventDefault();
+            closeModal('modalPelanggan');
+            showToast('Data pelanggan baru berhasil disimpan!', 'success');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.innerText = message;
+            if (type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-info text-sky-400';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Initialize on load
+        window.onload = function () {
+            renderTable();
+        };
+    </script>
+</body>
+
+</html>

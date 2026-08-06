@@ -1,64 +1,35 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { CircularProgress, Stack } from '@mui/material';
 import MainLayout from '@/components/pelanggan/layout/MainLayout';
 import ModalUbahPassword from '@/components/pelanggan/ModalUbahPassword';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/context/AuthContext';
 
 export default function PelangganLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
   const [showChangePassword, setShowChangePassword] = useState(false);
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('bumdes_logged_in');
-
-    if (!isLoggedIn) {
-      document.cookie = 'bumdes_logged_in=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      router.push('/login');
-      return;
-    }
-
-    // RBAC: hanya pelanggan yang boleh akses
-    const storedUser = localStorage.getItem('bumdes_user');
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-
-      if (user.role !== 'pelanggan') {
-        router.push('/admin/dashboard');
-        return;
-      }
-
-      // Cek apakah password sudah pernah diganti
+    if (user) {
       const isPasswordChanged = user.isPasswordChanged ?? user.is_password_changed;
       if (isPasswordChanged === false) {
         setShowChangePassword(true);
       }
-    } else {
-      router.push('/login');
-      return;
     }
-
-    setIsLoading(false);
-  }, [router]);
+  }, [user]);
 
   const handlePasswordChanged = () => {
     setShowChangePassword(false);
   };
 
-  if (isLoading) {
-    return (
-      <Stack height="100vh" alignItems="center" justifyContent="center">
-        <CircularProgress />
-      </Stack>
-    );
-  }
-
   return (
-    <MainLayout>
-      {children}
-      <ModalUbahPassword open={showChangePassword} onSuccess={handlePasswordChanged} />
-    </MainLayout>
+    <ProtectedRoute allowedRoles={['pelanggan']}>
+      <MainLayout>
+        {children}
+        <ModalUbahPassword open={showChangePassword} onSuccess={handlePasswordChanged} />
+      </MainLayout>
+    </ProtectedRoute>
   );
 }
+

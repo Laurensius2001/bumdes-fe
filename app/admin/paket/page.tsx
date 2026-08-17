@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import DataTable, { Column } from '@/components/DataTable';
 import FormModal, { FormField } from '@/components/FormModal';
-import ConfirmModal from '@/components/ConfirmModal';
 import IconifyIcon from '@/components/common/IconifyIcon';
 import { toast } from '@/components/Toast';
+import { Tooltip } from '@mui/material';
 import { paketService } from '@/services/paketService';
 
 // ─── Type from API ─────────────────────────────────────────
@@ -59,8 +59,6 @@ export default function AdminPaketPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deleteData, setDeleteData] = useState<{ id: number; nama: string } | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedJenis, setSelectedJenis] = useState<'PPPOE' | 'VOUCHER'>('PPPOE');
 
   // Edit State
@@ -250,31 +248,6 @@ export default function AdminPaketPage() {
     }
   };
 
-  // ─── Delete Handler ──────────────────────────────────────
-  const openDeleteConfirm = (db_id: number, nama: string) => {
-    setDeleteData({ id: db_id, nama });
-  };
-
-  const executeDelete = async () => {
-    if (!deleteData) return;
-    setIsDeleting(true);
-    try {
-      const res = await paketService.delete(deleteData.id);
-      if (res.ok) {
-        toast.success(`Paket "${deleteData.nama}" berhasil dihapus.`, 'Dihapus');
-        await fetchData();
-        setDeleteData(null);
-      } else {
-        toast.error(res.data?.message || 'Gagal menghapus paket', 'Gagal');
-      }
-    } catch (err) {
-      console.error('Error saat menghapus paket:', err);
-      toast.error('Terjadi kesalahan saat menghapus data.', 'Error');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
   // ─── Table Columns ───────────────────────────────────────
   const columns: Column<PaketRow>[] = [
     {
@@ -340,21 +313,15 @@ export default function AdminPaketPage() {
       key: 'id',
       label: 'Aksi',
       render: (row) => (
-        <div className="flex items-center justify-center space-x-1.5">
-          <button
-            onClick={() => openEditModal(row)}
-            className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-slate-100 transition-colors"
-            title="Edit Paket"
-          >
-            <IconifyIcon icon="lucide:square-pen" className="text-xs" />
-          </button>
-          <button
-            onClick={() => openDeleteConfirm(row.db_id, row.name)}
-            className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-100 transition-colors"
-            title="Hapus Paket"
-          >
-            <IconifyIcon icon="lucide:trash-2" className="text-xs" />
-          </button>
+        <div className="flex items-center justify-center">
+          <Tooltip title="Edit Paket" placement="top">
+            <button
+              onClick={() => openEditModal(row)}
+              className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all duration-200 shadow-xs flex items-center justify-center group"
+            >
+              <IconifyIcon icon="lucide:square-pen" className="text-sm transition-transform group-hover:scale-110" />
+            </button>
+          </Tooltip>
         </div>
       ),
     },
@@ -409,23 +376,6 @@ export default function AdminPaketPage() {
             setSelectedJenis(value as 'PPPOE' | 'VOUCHER');
           }
         }}
-      />
-
-      <ConfirmModal
-        isOpen={!!deleteData}
-        onClose={() => !isDeleting && setDeleteData(null)}
-        onConfirm={executeDelete}
-        title="Hapus Paket Internet"
-        message={
-          <>
-            Apakah Anda yakin ingin menghapus paket <span className="font-bold text-gray-900">{deleteData?.nama}</span>?<br />
-            Paket yang sudah digunakan pelanggan tidak bisa dihapus.
-          </>
-        }
-        confirmText="Ya, Hapus Paket"
-        cancelText="Batal"
-        type="danger"
-        isLoading={isDeleting}
       />
     </div>
   );

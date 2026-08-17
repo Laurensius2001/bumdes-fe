@@ -40,14 +40,6 @@ const navItems: NavItem[] = [
     collapsible: false,
   },
   {
-    title: 'Tagihan',
-    path: '/admin/tagihan',
-    icon: 'lucide:receipt',
-    active: false,
-    collapsible: false,
-    badge: '3 Belum',
-  },
-  {
     title: 'Cetak Struk',
     path: '/admin/struk',
     icon: 'lucide:printer',

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import DataTable, { Column } from '@/components/DataTable';
 import IconifyIcon from '@/components/common/IconifyIcon';
 import { toast } from '@/components/Toast';
+import { Tooltip } from '@mui/material';
 import { keluhanService } from '@/services/keluhanService';
 import dayjs from 'dayjs';
 import DetailKeluhan from './detail';
@@ -126,7 +127,12 @@ export default function AdminKeluhanPage() {
       key: 'kode_keluhan',
       label: 'Kode Keluhan',
       render: (row) => (
-        <span className="font-semibold text-emerald-600 text-xs sm:text-sm">{row.kode_keluhan}</span>
+        <button
+          onClick={() => openDetail(row)}
+          className="font-bold text-emerald-600 hover:text-emerald-700 hover:underline transition-all text-xs sm:text-sm text-left cursor-pointer"
+        >
+          {row.kode_keluhan}
+        </button>
       )
     },
     {
@@ -180,21 +186,15 @@ export default function AdminKeluhanPage() {
       key: 'id' as any,
       label: 'Aksi',
       render: (row) => (
-        <div className="flex items-center justify-center space-x-1.5">
-          <button
-            onClick={() => openDetail(row)}
-            className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-slate-100 transition-colors"
-            title="Lihat Detail"
-          >
-            <IconifyIcon icon="lucide:eye" className="text-xs" />
-          </button>
-          <button
-            onClick={() => openDetail(row)}
-            className="p-1.5 text-slate-400 hover:text-teal-600 rounded-lg hover:bg-slate-100 transition-colors"
-            title="Ubah Status"
-          >
-            <IconifyIcon icon="lucide:square-pen" className="text-xs" />
-          </button>
+        <div className="flex items-center justify-center">
+          <Tooltip title="Lihat Detail" placement="top">
+            <button
+              onClick={() => openDetail(row)}
+              className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all duration-200 shadow-xs flex items-center justify-center group"
+            >
+              <IconifyIcon icon="lucide:eye" className="text-sm transition-transform group-hover:scale-110" />
+            </button>
+          </Tooltip>
         </div>
       )
     }

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import DataTable, { Column } from '@/components/DataTable';
 import FormModal from '@/components/FormModal';
-import ConfirmModal from '@/components/ConfirmModal';
 import IconifyIcon from '@/components/common/IconifyIcon';
 import { toast } from '@/components/Toast';
 import { Tooltip } from '@mui/material';
@@ -67,8 +66,6 @@ export default function AdminPelangganPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deleteData, setDeleteData] = useState<{ id: number; nama: string } | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Edit State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -209,8 +206,8 @@ export default function AdminPelangganPage() {
       type: 'select' as const,
       placeholder: 'Pilih Status',
       options: [
-        { label: 'Aktif', value: 'Aktif' },
-        { label: 'Nonaktif', value: 'Nonaktif' },
+        { label: 'Aktif', value: 'aktif' },
+        { label: 'Nonaktif', value: 'nonaktif' },
       ],
       required: true,
     }
@@ -224,7 +221,7 @@ export default function AdminPelangganPage() {
       no_hp: row.telepon,
       alamat: row.alamat,
       paket_id: row.api_data?.paket_id?.toString() || '',
-      status: row.status === 'nonaktif' ? 'nonaktif' : 'aktif',
+      status: String(row.status || '').toLowerCase() === 'nonaktif' ? 'nonaktif' : 'aktif',
     });
     setIsEditModalOpen(true);
   };
@@ -256,31 +253,6 @@ export default function AdminPelangganPage() {
       toast.error('Terjadi kesalahan pada server. Silakan coba lagi.', 'Error');
     } finally {
       setIsEditing(false);
-    }
-  };
-
-  // ─── Delete Handler ──────────────────────────────────────
-  const openDeleteConfirm = (db_id: number, nama: string) => {
-    setDeleteData({ id: db_id, nama });
-  };
-
-  const executeDelete = async () => {
-    if (!deleteData) return;
-    setIsDeleting(true);
-    try {
-      const res = await pelangganService.delete(deleteData.id);
-      if (res.ok) {
-        toast.success(`Data pelanggan ${deleteData.nama} berhasil dihapus.`, 'Dihapus');
-        await fetchData(); // Refresh data
-        setDeleteData(null); // Close modal
-      } else {
-        toast.error(res.data?.message || 'Gagal menghapus pelanggan', 'Gagal');
-      }
-    } catch (err) {
-      console.error('Error saat menghapus pelanggan:', err);
-      toast.error('Terjadi kesalahan saat menghapus data.', 'Error');
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -354,21 +326,13 @@ export default function AdminPelangganPage() {
       key: 'id',
       label: 'Aksi',
       render: (row) => (
-        <div className="flex items-center justify-center space-x-1.5">
+        <div className="flex items-center justify-center">
           <Tooltip title="Edit Pelanggan" placement="top">
             <button
               onClick={() => openEditModal(row)}
-              className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-slate-100 transition-colors"
+              className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all duration-200 shadow-xs flex items-center justify-center group"
             >
-              <IconifyIcon icon="lucide:square-pen" className="text-xs" />
-            </button>
-          </Tooltip>
-          <Tooltip title="Hapus Pelanggan" placement="top">
-            <button
-              onClick={() => openDeleteConfirm(row.db_id, row.name)}
-              className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-100 transition-colors"
-            >
-              <IconifyIcon icon="lucide:trash-2" className="text-xs" />
+              <IconifyIcon icon="lucide:square-pen" className="text-sm transition-transform group-hover:scale-110" />
             </button>
           </Tooltip>
         </div>
@@ -536,23 +500,6 @@ export default function AdminPelangganPage() {
         onSubmit={handleEditPelanggan}
         initialData={editData}
         submitText={isEditing ? 'Menyimpan...' : 'Simpan'}
-      />
-
-      <ConfirmModal
-        isOpen={!!deleteData}
-        onClose={() => !isDeleting && setDeleteData(null)}
-        onConfirm={executeDelete}
-        title="Hapus Pelanggan"
-        message={
-          <>
-            Apakah Anda yakin ingin menghapus pelanggan <span className="font-bold text-gray-900">{deleteData?.nama}</span>?<br />
-            Tindakan ini tidak dapat dibatalkan dan akan menghapus akun user yang terkait.
-          </>
-        }
-        confirmText="Ya, Hapus Data"
-        cancelText="Batal"
-        type="danger"
-        isLoading={isDeleting}
       />
     </div>
   );

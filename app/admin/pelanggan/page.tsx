@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import DataTable, { Column } from '@/components/DataTable';
 import FormModal from '@/components/FormModal';
 import IconifyIcon from '@/components/common/IconifyIcon';
@@ -8,6 +10,7 @@ import { toast } from '@/components/Toast';
 import { Tooltip } from '@mui/material';
 import { pelangganService } from '@/services/pelangganService';
 import { paketService } from '@/services/paketService';
+import { getApiAssetUrl } from '@/services/api';
 
 // ─── Type from API ─────────────────────────────────────────
 type PelangganAPI = {
@@ -24,6 +27,7 @@ type PelangganAPI = {
   user: {
     username: string;
     role: string;
+    foto_profil?: string | null;
     isActive: boolean;
     isPasswordChanged: boolean;
   };
@@ -32,6 +36,7 @@ type PelangganAPI = {
 // ─── Type for DataTable ────────────────────────────────────
 type Pelanggan = {
   db_id: number;
+  foto_profil?: string | null;
   id: string; // kode_pelanggan
   name: string;
   paket: string;
@@ -48,6 +53,7 @@ const mapApiToRow = (p: PelangganAPI, paketList: { id: number; nama_paket: strin
 
   return {
     db_id: p.id,
+    foto_profil: p.user?.foto_profil,
     id: p.kode_pelanggan,
     name: p.nama,
     paket: paketInfo ? paketInfo.nama_paket : `Paket ${p.paket_id}`,
@@ -60,6 +66,7 @@ const mapApiToRow = (p: PelangganAPI, paketList: { id: number; nama_paket: strin
 };
 
 export default function AdminPelangganPage() {
+  const router = useRouter();
   const [data, setData] = useState<Pelanggan[]>([]);
   const [paketList, setPaketList] = useState<{ id: number; nama_paket: string }[]>([]);
   const [paketOptions, setPaketOptions] = useState<{ label: string; value: number }[]>([]);
@@ -71,6 +78,9 @@ export default function AdminPelangganPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Avatar Preview Modal State
+  const [previewAvatar, setPreviewAvatar] = useState<{ url: string; name: string } | null>(null);
 
   // Custom filter state
   const [paketFilter, setPaketFilter] = useState('Semua Paket');
@@ -261,12 +271,36 @@ export default function AdminPelangganPage() {
     {
       key: 'name',
       label: 'ID / Nama Pelanggan',
-      render: (row) => (
-        <div>
-          <div className="font-bold text-gray-800 text-[12.5px] leading-tight">{row.name}</div>
-          <div className="text-[10.5px] font-medium text-gray-400 mt-0.5">{row.id}</div>
-        </div>
-      ),
+      render: (row) => {
+        const avatarUrl = getApiAssetUrl(row.foto_profil);
+        return (
+          <div className="flex items-center gap-3">
+            <Tooltip title="Klik untuk lihat foto" placement="top" arrow>
+              <button
+                type="button"
+                onClick={() => setPreviewAvatar({ url: avatarUrl, name: row.name })}
+                className="relative w-9 h-9 shrink-0 rounded-full overflow-hidden border border-slate-200 hover:border-emerald-500 hover:scale-110 shadow-2xs bg-slate-100 flex items-center justify-center cursor-pointer transition-all group"
+              >
+                <img
+                  src={avatarUrl}
+                  alt={row.name}
+                  onError={(e: any) => {
+                    e.currentTarget.src = '/assets/profile.jpg';
+                  }}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  <IconifyIcon icon="lucide:zoom-in" className="text-white text-[10px]" />
+                </div>
+              </button>
+            </Tooltip>
+            <div className="flex flex-col min-w-0">
+              <div className="font-bold text-gray-800 text-[12.5px] leading-tight truncate">{row.name}</div>
+              <div className="text-[10.5px] font-mono font-medium text-gray-400 mt-0.5">{row.id}</div>
+            </div>
+          </div>
+        );
+      },
     },
     {
       key: 'paket',
@@ -326,7 +360,15 @@ export default function AdminPelangganPage() {
       key: 'id',
       label: 'Aksi',
       render: (row) => (
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center gap-1.5">
+          <Tooltip title="Cetak Struk" placement="top">
+            <button
+              onClick={() => router.push(`/admin/struk?pelangganId=${row.db_id}`)}
+              className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 border border-blue-200/80 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-200 shadow-xs flex items-center justify-center group"
+            >
+              <IconifyIcon icon="lucide:printer" className="text-sm transition-transform group-hover:scale-110" />
+            </button>
+          </Tooltip>
           <Tooltip title="Edit Pelanggan" placement="top">
             <button
               onClick={() => openEditModal(row)}
@@ -501,6 +543,70 @@ export default function AdminPelangganPage() {
         initialData={editData}
         submitText={isEditing ? 'Menyimpan...' : 'Simpan'}
       />
+
+      {/* ─── AVATAR PREVIEW MODAL ───────────────────────────────────── */}
+      {previewAvatar && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
+              onClick={() => setPreviewAvatar(null)}
+            />
+
+            {/* Modal Box */}
+            <div className="relative w-full max-w-sm transform rounded-3xl bg-white shadow-2xl transition-all flex flex-col border border-slate-200/80 animate-in zoom-in-95 duration-200">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-200/80">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600">
+                    <IconifyIcon icon="lucide:user" className="text-xl text-emerald-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-900">{previewAvatar.name}</h2>
+                    <p className="text-[11px] text-slate-500">Foto Profil Pelanggan</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewAvatar(null)}
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors cursor-pointer"
+                >
+                  <IconifyIcon icon="lucide:x" className="text-base" />
+                </button>
+              </div>
+
+              {/* Body: High-Res Rounded Photo Display */}
+              <div className="px-6 py-6 text-center space-y-4">
+                <div className="relative mx-auto w-52 h-52 rounded-2xl overflow-hidden border-4 border-emerald-500 shadow-xl bg-slate-900 flex items-center justify-center">
+                  <img
+                    src={previewAvatar.url}
+                    alt={previewAvatar.name}
+                    onError={(e: any) => {
+                      e.currentTarget.src = '/assets/profile.jpg';
+                    }}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-2.5 px-6 pt-3 pb-5 border-t border-slate-200/80">
+                <button
+                  type="button"
+                  onClick={() => setPreviewAvatar(null)}
+                  className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-semibold text-xs py-2.5 transition-all cursor-pointer shadow-xs"
+                >
+                  Tutup Pratinjau
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

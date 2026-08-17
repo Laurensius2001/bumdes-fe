@@ -5,6 +5,7 @@ import IconifyIcon from '@/components/common/IconifyIcon';
 import { toast } from '@/components/Toast';
 import { keluhanService } from '@/services/keluhanService';
 import { paketService } from '@/services/paketService';
+import { getApiAssetUrl } from '@/services/api';
 import dayjs from 'dayjs';
 
 interface DetailProps {
@@ -90,16 +91,16 @@ export default function DetailKeluhan({ keluhan, onBack, onUpdateSuccess }: Deta
 
         const updatedObj = response.data.data
           ? {
-              ...currentKeluhan,
-              ...response.data.data,
-              status: formStatus,
-              catatan_admin: formCatatan,
-            }
+            ...currentKeluhan,
+            ...response.data.data,
+            status: formStatus,
+            catatan_admin: formCatatan,
+          }
           : {
-              ...currentKeluhan,
-              status: formStatus,
-              catatan_admin: formCatatan,
-            };
+            ...currentKeluhan,
+            status: formStatus,
+            catatan_admin: formCatatan,
+          };
         setCurrentKeluhan(updatedObj);
 
         if (onUpdateSuccess) {
@@ -146,7 +147,7 @@ export default function DetailKeluhan({ keluhan, onBack, onUpdateSuccess }: Deta
   const getStepStatus = (stepIndex: number) => {
     const s = currentKeluhan.status?.toUpperCase();
     const statuses = ['MENUNGGU', 'DIPROSES', 'SELESAI'];
-    
+
     let currentIndex = statuses.indexOf(s);
     if (s === 'BARU') currentIndex = 0;
     if (s === 'PROSES') currentIndex = 1;
@@ -294,11 +295,11 @@ export default function DetailKeluhan({ keluhan, onBack, onUpdateSuccess }: Deta
           </div>
         )}
         <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">STATUS PENANGANAN LAPORAN</p>
-        
+
         <div className="grid grid-cols-3 gap-2 relative pt-2">
           {/* Connector Line */}
           <div className="absolute top-7 left-[16%] right-[16%] h-[2px] bg-slate-200 z-0 hidden md:block"></div>
-          
+
           {renderStep(0, '1. Menunggu', 'Laporan Diterima System', 'lucide:check-circle-2')}
           {renderStep(1, '2. Diproses', 'Teknisi Pengecekan Lapangan', 'lucide:wrench')}
           {renderStep(2, '3. Selesai', 'Kendala Teratasi', 'lucide:check-circle')}
@@ -325,9 +326,16 @@ export default function DetailKeluhan({ keluhan, onBack, onUpdateSuccess }: Deta
 
             <div className="space-y-3.5 pt-4">
               {/* Customer Avatar & Name Header Box */}
-              <div className="flex items-center space-x-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
-                <div className="w-11 h-11 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center text-sm shrink-0 shadow-xs uppercase">
-                  {currentKeluhan.pelanggan?.nama?.substring(0, 2) || 'PL'}
+              <div className="flex items-center space-x-3.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-emerald-500/40 bg-slate-100 shadow-2xs shrink-0 flex items-center justify-center">
+                  <img
+                    src={getApiAssetUrl(currentKeluhan.pelanggan?.user?.foto_profil || currentKeluhan.pelanggan?.foto_profil)}
+                    alt={currentKeluhan.pelanggan?.nama || 'Pelanggan'}
+                    onError={(e: any) => {
+                      e.currentTarget.src = '/assets/profile.jpg';
+                    }}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="overflow-hidden flex-1">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">NAMA PELANGGAN</p>
@@ -351,7 +359,7 @@ export default function DetailKeluhan({ keluhan, onBack, onUpdateSuccess }: Deta
                     {isVoucher ? 'KODE VOUCHER / ID' : 'IP / PERANGKAT'}
                   </p>
                   <p className="font-bold text-slate-900 text-sm">
-                    {isVoucher 
+                    {isVoucher
                       ? (selectedPaket?.kode_voucher || currentKeluhan.pelanggan?.paket?.kode_voucher || 'VCH-HARI-001')
                       : '10.20.1.42 (4 Dev)'}
                   </p>
@@ -474,11 +482,10 @@ export default function DetailKeluhan({ keluhan, onBack, onUpdateSuccess }: Deta
                 <button
                   type="button"
                   onClick={() => setOpenDropdown(!openDropdown)}
-                  className={`w-full flex items-center justify-between rounded-xl border bg-white px-4 py-2.5 outline-none transition-all text-left text-xs font-semibold text-slate-800 ${
-                    openDropdown
+                  className={`w-full flex items-center justify-between rounded-xl border bg-white px-4 py-2.5 outline-none transition-all text-left text-xs font-semibold text-slate-800 ${openDropdown
                       ? 'border-emerald-500 ring-2 ring-emerald-100'
                       : 'border-slate-200 hover:border-slate-300'
-                  }`}
+                    }`}
                 >
                   <span>
                     {statusOptions.find(o => o.value === formStatus)?.label || 'Pilih Status'}
@@ -499,11 +506,10 @@ export default function DetailKeluhan({ keluhan, onBack, onUpdateSuccess }: Deta
                           setFormStatus(opt.value);
                           setOpenDropdown(false);
                         }}
-                        className={`w-full rounded-lg px-3 py-2 text-left text-xs font-semibold transition-colors ${
-                          formStatus === opt.value
+                        className={`w-full rounded-lg px-3 py-2 text-left text-xs font-semibold transition-colors ${formStatus === opt.value
                             ? 'bg-emerald-600 text-white'
                             : 'text-slate-700 hover:bg-slate-50'
-                        }`}
+                          }`}
                       >
                         {opt.label}
                       </button>

@@ -79,15 +79,26 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps): ReactElement =>
       <div className="relative z-10 flex flex-col h-full justify-between overflow-hidden">
         
         {/* Header / Branding */}
-        <div className={`mb-5 mt-1 flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} min-h-[48px] px-1 shrink-0`}>
-          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-bold shadow-md shadow-emerald-950/40">
-            <IconifyIcon icon="lucide:wifi" className="text-white text-sm" />
-          </div>
-          {!isCollapsed && (
-            <div className="flex flex-col justify-center overflow-hidden">
-              <span className="truncate text-sm font-bold leading-tight tracking-wide text-white">BTS SODONG NET</span>
-              <span className="mt-[2px] truncate rounded bg-emerald-950/80 px-1.5 py-[1px] text-[9px] font-medium tracking-wider text-emerald-400 border border-emerald-500/30 uppercase w-fit">
-                BUMDES TIRTA SEJAHTERA
+        <div className="mb-6 mt-2 flex items-center justify-center shrink-0 px-1">
+          {isCollapsed ? (
+            <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl p-1.5 bg-gradient-to-b from-slate-800/90 to-emerald-950/90 border border-emerald-500/30 shadow-md shadow-emerald-950/40">
+              <img
+                src="/assets/logo/shield-bts.png"
+                alt="BTS SODONG NET"
+                className="h-full w-full object-contain"
+              />
+            </div>
+          ) : (
+            <div className="relative flex flex-col items-center justify-center w-full py-4 px-3 rounded-2xl bg-gradient-to-b from-slate-900/90 via-slate-800/70 to-emerald-950/80 border border-emerald-500/30 shadow-lg shadow-emerald-950/50">
+              <div className="relative h-28 w-28 mb-2.5 flex items-center justify-center">
+                <img
+                  src="/assets/logo/shield-bts.png"
+                  alt="BTS SODONG NET"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <span className="text-base font-extrabold tracking-wider text-emerald-400 leading-tight">
+                BTS SODONG NET
               </span>
             </div>
           )}
@@ -116,8 +127,15 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps): ReactElement =>
             <div className="flex flex-col gap-2 rounded-xl bg-slate-900/80 p-2">
               <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
                 <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-700 font-bold text-white shadow">
-                    {userName.substring(0, 1).toUpperCase()}
+                  <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg overflow-hidden border border-emerald-500/40 bg-slate-800 shadow">
+                    <img
+                      src={user?.foto_profil ? (user.foto_profil.startsWith('http') ? user.foto_profil : `http://localhost:3000${user.foto_profil.startsWith('/') ? user.foto_profil : `/${user.foto_profil}`}`) : '/assets/profile.jpg'}
+                      alt={userName}
+                      onError={(e: any) => {
+                        e.currentTarget.src = '/assets/profile.jpg';
+                      }}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   {!isCollapsed && (
                     <div className="flex flex-col overflow-hidden">

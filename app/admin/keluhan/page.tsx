@@ -7,6 +7,7 @@ import IconifyIcon from '@/components/common/IconifyIcon';
 import { toast } from '@/components/Toast';
 import { Tooltip } from '@mui/material';
 import { keluhanService } from '@/services/keluhanService';
+import { getApiAssetUrl } from '@/services/api';
 import dayjs from 'dayjs';
 import DetailKeluhan from './detail';
 
@@ -27,6 +28,11 @@ interface Keluhan {
     nama: string;
     no_hp: string;
     alamat: string;
+    user?: {
+      foto_profil?: string | null;
+      username?: string;
+    };
+    foto_profil?: string | null;
     paket: {
       id: number;
       nama_paket: string;
@@ -138,12 +144,27 @@ export default function AdminKeluhanPage() {
     {
       key: 'pelanggan' as any,
       label: 'Nama Pelanggan',
-      render: (row) => (
-        <div>
-          <div className="font-semibold text-slate-900 text-xs sm:text-sm">{row.pelanggan?.nama || '-'}</div>
-          <div className="text-[11px] text-slate-400 font-medium mt-0.5">{row.pelanggan?.no_hp || '-'}</div>
-        </div>
-      )
+      render: (row) => {
+        const avatarUrl = getApiAssetUrl(row.pelanggan?.user?.foto_profil || (row.pelanggan as any)?.foto_profil);
+        return (
+          <div className="flex items-center gap-2.5">
+            <div className="relative w-8 h-8 shrink-0 rounded-full overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center shadow-2xs">
+              <img
+                src={avatarUrl}
+                alt={row.pelanggan?.nama || 'Pelanggan'}
+                onError={(e: any) => {
+                  e.currentTarget.src = '/assets/profile.jpg';
+                }}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <div className="font-semibold text-slate-900 text-xs sm:text-sm truncate">{row.pelanggan?.nama || '-'}</div>
+              <div className="text-[11px] text-slate-400 font-medium mt-0.5">{row.pelanggan?.no_hp || '-'}</div>
+            </div>
+          </div>
+        );
+      }
     },
     {
       key: 'paket' as any,

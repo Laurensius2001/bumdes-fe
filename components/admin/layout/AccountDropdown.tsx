@@ -6,40 +6,45 @@ import {
   Typography,
 } from '@mui/material';
 import IconifyIcon from '@/components/common/IconifyIcon';
-import { MouseEvent, ReactElement, useState, useEffect } from 'react';
+import { MouseEvent, ReactElement, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import profile from 'assets/profile/profile.jpg';
-
 import { useAuth } from '@/context/AuthContext';
+import { getApiAssetUrl } from '@/services/api';
 
 const AccountDropdown = (): ReactElement => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const { user, logout } = useAuth();
+  const router = useRouter();
 
-  const userName = user?.username || 'Administrator';
-  const userRole = user?.role || 'Operator BUMDes';
+  const userName = user?.username || 'User';
+  const userRole = user?.role === 'admin' ? 'Administrator' : 'Pelanggan BUMDes';
+  const avatarUrl = getApiAssetUrl(user?.foto_profil);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
+  
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const handleNavigateProfile = () => {
+    handleClose();
+    if (user?.role === 'admin') {
+      router.push('/admin/profile');
+    } else {
+      router.push('/pelanggan/profile');
+    }
+  };
+
   const handleLogout = () => {
     handleClose();
     logout();
   };
 
-
   return (
     <>
-      <div className="hidden">
-        <IconifyIcon icon="lucide:chevron-up" />
-        <IconifyIcon icon="lucide:user" />
-        <IconifyIcon icon="lucide:settings" />
-        <IconifyIcon icon="lucide:log-out" />
-      </div>
       <button
         id="account-dropdown-button"
         aria-controls={open ? 'account-dropdown-menu' : undefined}
@@ -49,7 +54,16 @@ const AccountDropdown = (): ReactElement => {
         className="flex items-center space-x-2.5 cursor-pointer p-1 rounded-xl hover:bg-slate-100 transition-colors focus:outline-none"
       >
         <div className="relative">
-          <Avatar alt={userName} src={profile.src} sx={{ width: 32, height: 32, border: '1px solid #e2e8f0' }} />
+          <Avatar
+            alt={userName}
+            src={avatarUrl}
+            imgProps={{
+              onError: (e: any) => {
+                e.currentTarget.src = '/assets/profile.jpg';
+              },
+            }}
+            sx={{ width: 34, height: 34, border: '2px solid #e2e8f0' }}
+          />
         </div>
         <div className="hidden md:block text-left pr-1">
           <p className="text-xs font-semibold text-slate-700 leading-tight">{userName}</p>
@@ -95,14 +109,12 @@ const AccountDropdown = (): ReactElement => {
         </div>
         <Divider sx={{ mb: 1, borderColor: '#f1f5f9' }} />
         
-        <MenuItem onClick={handleClose} sx={{ minHeight: 0, px: 2, py: 1, gap: 1.5, '&:hover': { bgcolor: '#f8fafc' } }}>
-          <IconifyIcon icon="lucide:user" className="text-gray-400 text-lg" />
+        <MenuItem
+          onClick={handleNavigateProfile}
+          sx={{ minHeight: 0, px: 2, py: 1, gap: 1.5, '&:hover': { bgcolor: '#f8fafc' } }}
+        >
+          <IconifyIcon icon="lucide:user" className="text-emerald-600 text-lg" />
           <span className="text-[13px] font-medium text-gray-700">Profil & Akun</span>
-        </MenuItem>
-        
-        <MenuItem onClick={handleClose} sx={{ minHeight: 0, px: 2, py: 1, gap: 1.5, '&:hover': { bgcolor: '#f8fafc' } }}>
-          <IconifyIcon icon="lucide:settings" className="text-gray-400 text-lg" />
-          <span className="text-[13px] font-medium text-gray-700">Pengaturan Sistem</span>
         </MenuItem>
 
         <Divider sx={{ my: 1, borderColor: '#f1f5f9' }} />

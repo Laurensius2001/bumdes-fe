@@ -1,12 +1,18 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { authService } from '@/services/authService';
 
 export interface User {
   id: number | string;
   username: string;
   role: 'admin' | 'pelanggan' | string;
+  foto_profil?: string | null;
+  isActive?: boolean;
+  is_active?: boolean;
+  isPasswordChanged?: boolean;
+  is_password_changed?: boolean;
   [key: string]: any;
 }
 
@@ -17,6 +23,8 @@ interface AuthContextType {
   isLoading: boolean;
   login: (authData: { token: string; user: User }) => void;
   logout: () => void;
+  updateUser: (updatedUser: Partial<User>) => void;
+  refreshUser: () => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -91,6 +99,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     router.push('/login');
   };
 
+  /**
+   * Update partial user fields in state and localStorage without re-login
+   */
+  const updateUser = useCallback((updatedFields: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const merged = { ...prev, ...updatedFields };
+      try {
+        localStorage.setItem('bumdes_user', JSON.stringify(merged));
+        localStorage.setItem('user', JSON.stringify(merged));
+      } catch (e) {
+        console.error('Error saving updated user to localStorage:', e);
+      }
+      return merged;
+    });
+  }, []);
+
+  /**
+   * Fetch fresh profile from backend and sync state & localStorage
+   */
+  const refreshUser = useCallback(async (): Promise<User | null> => {
+    try {
+      const res = await authService.getProfile();
+      if (res.ok && res.data?.data) {
+        const freshUser = res.data.data;
+        setUser((prev) => {
+          const merged = { ...(prev || {}), ...freshUser };
+          try {
+            localStorage.setItem('bumdes_user', JSON.stringify(merged));
+            localStorage.setItem('user', JSON.stringify(merged));
+          } catch (e) {
+            console.error('Error saving refreshed user:', e);
+          }
+          return merged;
+        });
+        return freshUser;
+      }
+    } catch (err) {
+      console.error('Error refreshing user profile:', err);
+    }
+    return null;
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -100,6 +151,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isLoading,
         login,
         logout,
+        updateUser,
+        refreshUser,
       }}
     >
       {children}

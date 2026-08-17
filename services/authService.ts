@@ -8,6 +8,13 @@ export const authService = {
     });
   },
 
+  getProfile: async () => {
+    return await apiFetch('/auth/profile', {
+      method: 'GET',
+      withAuth: true,
+    });
+  },
+
   changePassword: async (payload: {
     old_password: string;
     new_password: string;
@@ -19,5 +26,12 @@ export const authService = {
       withAuth: true,
     });
   },
-};
 
+  uploadPhoto: async (formData: FormData) => {
+    return await apiFetch('/auth/profile/photo', {
+      method: 'POST',
+      body: formData,
+      withAuth: true,
+    });
+  },
+};

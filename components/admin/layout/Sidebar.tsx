@@ -127,8 +127,15 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps): ReactElement =>
             <div className="flex flex-col gap-2 rounded-xl bg-slate-900/80 p-2">
               <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
                 <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-700 font-bold text-white shadow">
-                    {userName.substring(0, 1).toUpperCase()}
+                  <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg overflow-hidden border border-emerald-500/40 bg-slate-800 shadow">
+                    <img
+                      src={user?.foto_profil ? (user.foto_profil.startsWith('http') ? user.foto_profil : `http://localhost:3000${user.foto_profil.startsWith('/') ? user.foto_profil : `/${user.foto_profil}`}`) : '/assets/profile.jpg'}
+                      alt={userName}
+                      onError={(e: any) => {
+                        e.currentTarget.src = '/assets/profile.jpg';
+                      }}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   {!isCollapsed && (
                     <div className="flex flex-col overflow-hidden">

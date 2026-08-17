@@ -294,13 +294,13 @@ export default function PelangganKeluhanLandingPage() {
           </div>
 
           <a
-            href="https://wa.me/6281234567890"
+            href="https://wa.me/6282319058505"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full py-2.5 px-4 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all flex items-center justify-center space-x-2"
           >
             <IconifyIcon icon="lucide:message-circle" className="text-sm text-emerald-500" />
-            <span>Hubungi CS Technical Support</span>
+            <span>Pengaduan WA: 0823-1905-8505</span>
           </a>
         </div>
 

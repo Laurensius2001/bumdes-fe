@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   description: "Dashboard System - BUMDes Tirta Sejahtera",
 };
 
+import { ToastContainer } from "@/components/Toast";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,6 +28,7 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeProvider>
             {children}
+            <ToastContainer />
           </ThemeProvider>
         </AuthProvider>
       </body>

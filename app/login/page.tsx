@@ -217,7 +217,7 @@ const LoginPage = () => {
                       id="email"
                       type="text"
                       required
-                      placeholder="admin@sodong.desa.id"
+                      placeholder="Masukkan username atau email Anda"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={isPending}
@@ -248,7 +248,7 @@ const LoginPage = () => {
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       required
-                      placeholder="Masukkan kata sandi"
+                      placeholder="Masukkan kata sandi Anda"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={isPending}

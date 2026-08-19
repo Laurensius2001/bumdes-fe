@@ -510,9 +510,9 @@ export default function AdminPelangganPage() {
         columns={columns}
         data={filteredData}
         isLoading={isLoading}
-        searchKey="name"
-        searchKeys={['name', 'id']}
-        searchPlaceholder="Cari nama / ID pelanggan . . ."
+        searchKey="id"
+        searchKeys={['id', 'name']}
+        searchPlaceholder="Cari kode / nama pelanggan . . ."
         statusOptions={['Aktif', 'Nonaktif']}
         onAdd={() => setIsModalOpen(true)}
         onExport={() => console.log('Export clicked')}

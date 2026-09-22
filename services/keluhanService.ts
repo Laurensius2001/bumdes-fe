@@ -1,8 +1,9 @@
 import { apiFetch } from './api';
 
 export const keluhanService = {
-  getAll: async () => {
-    return await apiFetch('/keluhan', { withAuth: true });
+  getAll: async (params?: { pelanggan_id?: number }) => {
+    const query = params?.pelanggan_id ? `?pelanggan_id=${params.pelanggan_id}` : '';
+    return await apiFetch(`/keluhan${query}`, { withAuth: true });
   },
   create: async (data: { pelanggan_id: number; kategori: string; judul: string; deskripsi: string; }) => {
     return await apiFetch('/keluhan', {

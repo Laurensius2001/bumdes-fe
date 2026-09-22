@@ -52,6 +52,17 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
   const [showNewPass, setShowNewPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
 
+  // Admin WhatsApp Contact State
+  const [adminNoHp, setAdminNoHp] = useState(user?.no_hp || '');
+  const [isUpdatingWa, setIsUpdatingWa] = useState(false);
+
+  // Sync adminNoHp when user changes
+  useEffect(() => {
+    if (user?.no_hp !== undefined && user?.no_hp !== null) {
+      setAdminNoHp(user.no_hp);
+    }
+  }, [user?.no_hp]);
+
   // Fetch fresh user profile on mount
   useEffect(() => {
     refreshUser();
@@ -254,7 +265,7 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
 
       if (res.ok && res.data?.success) {
         const updatedUserData = res.data.data;
-        
+
         // Update local auth state immediately
         updateUser({ foto_profil: updatedUserData.foto_profil });
         await refreshUser();
@@ -315,6 +326,39 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
     }
   };
 
+  // Handle Admin WhatsApp Number Update
+  const handleUpdateAdminWa = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!adminNoHp.trim()) {
+      toast.error('Nomor WhatsApp wajib diisi.', 'Form Belum Lengkap');
+      return;
+    }
+
+    const cleanPhone = adminNoHp.replace(/\D/g, '');
+    if (cleanPhone.length < 9 || cleanPhone.length > 15) {
+      toast.error('Nomor WhatsApp tidak valid. Masukkan antara 9-15 digit angka.', 'Format Salah');
+      return;
+    }
+
+    setIsUpdatingWa(true);
+    try {
+      const res = await authService.updateProfile({ no_hp: adminNoHp.trim() });
+
+      if (res.ok && res.data?.success) {
+        updateUser({ no_hp: res.data.data.no_hp });
+        await refreshUser();
+        toast.success('Nomor WhatsApp layanan admin berhasil disimpan!');
+      } else {
+        toast.error(res.data?.message || 'Gagal memperbarui nomor WhatsApp.', 'Gagal');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan koneksi server.', 'Gagal');
+    } finally {
+      setIsUpdatingWa(false);
+    }
+  };
+
   const currentAvatarUrl = getApiAssetUrl(user?.foto_profil);
   const userName = user?.username || 'User';
   const userRoleLabel = role === 'admin' ? 'Administrator Sistem' : 'Pelanggan BUMDes';
@@ -334,17 +378,17 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
 
       {/* ─── FULL-VIEW HERO PROFILE CARD ───────────────────────────── */}
       <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 p-6 sm:p-8 rounded-2xl border border-slate-800 text-white shadow-sm">
-        
+
         {/* Background Watermark Icon */}
         <div className="absolute -right-6 -bottom-8 opacity-10 text-emerald-400 pointer-events-none">
           <IconifyIcon icon="lucide:user-check" className="text-[180px]" />
         </div>
 
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
-          
+
           {/* Left: Avatar & Main Info */}
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
-            
+
             {/* Avatar with Edit Overlay */}
             <div className="relative group shrink-0">
               <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-3 border-emerald-500/50 shadow-xl bg-slate-800 flex items-center justify-center">
@@ -357,7 +401,7 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
                   className="w-full h-full object-cover"
                 />
               </div>
-              
+
               {/* Camera Hover Overlay */}
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -380,11 +424,10 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
                     {pelangganData.kode_pelanggan}
                   </span>
                 )}
-                <span className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-md border ${
-                  isStatusAktif
+                <span className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-md border ${isStatusAktif
                     ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
                     : 'bg-rose-500/10 text-rose-300 border-rose-500/30'
-                }`}>
+                  }`}>
                   Status: {isStatusAktif ? 'Aktif' : 'Nonaktif'}
                 </span>
               </div>
@@ -396,6 +439,12 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
                 <span>Username: <b className="font-mono text-emerald-400">@{userName}</b></span>
                 <span>•</span>
                 <span>Role: <b className="capitalize text-slate-200">{role}</b></span>
+                {role === 'admin' && user?.no_hp && (
+                  <>
+                    <span>•</span>
+                    <span>WA: <b className="font-mono text-emerald-400">{user.no_hp}</b></span>
+                  </>
+                )}
               </p>
 
               <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-3">
@@ -435,7 +484,7 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
 
       {/* ─── 3 SUMMARY STATS METRIC CARDS ──────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        
+
         {/* Stat 1: Identitas Akun */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
@@ -480,7 +529,7 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
           </div>
           <div className="mt-4">
             <h3 className="text-xl font-bold text-slate-900">
-              {role === 'pelanggan' 
+              {role === 'pelanggan'
                 ? (pelangganData?.paket ? `${pelangganData.paket.mbps} Mbps` : 'Langganan Aktif')
                 : 'Penuh / Operator'}
             </h3>
@@ -519,6 +568,14 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
                 <span className="text-slate-500 font-medium">Hak Akses / Role</span>
                 <span className="font-semibold text-emerald-600 capitalize">{role}</span>
               </div>
+              {role === 'admin' && (
+                <div className="py-2.5 flex justify-between items-center">
+                  <span className="text-slate-500 font-medium">Nomor WhatsApp Admin</span>
+                  <span className="font-bold font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-lg text-xs">
+                    {user?.no_hp || 'Belum diatur'}
+                  </span>
+                </div>
+              )}
               <div className="py-2.5 flex justify-between items-center">
                 <span className="text-slate-500 font-medium">Status Akun</span>
                 <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -599,9 +656,87 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
 
         </div>
 
-        {/* RIGHT COLUMN: GANTI PASSWORD (5 Cols) */}
+        {/* RIGHT COLUMN: ADMIN WHATSAPP & GANTI PASSWORD (5 Cols) */}
         <div className="lg:col-span-5 space-y-6">
-          
+
+          {/* Admin WhatsApp Management Card (Khusus Admin) */}
+          {role === 'admin' && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+                    <IconifyIcon icon="lucide:phone-call" className="text-base" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Kontak WhatsApp Layanan</h3>
+                    <p className="text-[11px] text-slate-500">Nomor ini tampil dinamis di portal pelanggan.</p>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md">
+                  Dinamis
+                </span>
+              </div>
+
+              <form onSubmit={handleUpdateAdminWa} className="space-y-4 text-xs sm:text-sm">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                    <span>Nomor WhatsApp Admin</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Format: 08xx / 628xx</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-600 pointer-events-none">
+                      <IconifyIcon icon="lucide:message-circle" className="text-base" />
+                    </div>
+                    <input
+                      type="text"
+                      value={adminNoHp}
+                      onChange={(e) => setAdminNoHp(e.target.value)}
+                      placeholder="Contoh: 082319058505"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-xs font-mono transition-all"
+                      required
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    Setiap perubahan nomor WhatsApp di sini akan langsung sinkron ke tombol kontak & pengaduan di dashboard dan halaman keluhan pelanggan.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="submit"
+                    disabled={isUpdatingWa}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    {isUpdatingWa ? (
+                      <>
+                        <IconifyIcon icon="lucide:loader-2" className="animate-spin text-sm" />
+                        <span>Menyimpan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <IconifyIcon icon="lucide:check" className="text-sm" />
+                        <span>Simpan Nomor WhatsApp</span>
+                      </>
+                    )}
+                  </button>
+
+                  {adminNoHp && (
+                    <a
+                      href={`https://wa.me/${adminNoHp.replace(/\D/g, '').replace(/^0/, '62')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2.5 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-emerald-600 font-medium text-xs transition-all flex items-center gap-1.5 shrink-0"
+                      title="Tes buka tautan WhatsApp"
+                    >
+                      <IconifyIcon icon="lucide:external-link" className="text-xs" />
+                      <span>Tes Chat</span>
+                    </a>
+                  )}
+                </div>
+              </form>
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center space-x-3 border-b border-slate-100 pb-3">
               <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
@@ -722,14 +857,14 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
         <div className="fixed inset-0 z-[9999] overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
             {/* Full Screen Backdrop */}
-            <div 
+            <div
               className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
               onClick={!isUploading ? handleCancelPreview : undefined}
             />
 
             {/* Modal Box */}
             <div className="relative w-full max-w-md transform rounded-3xl bg-white shadow-2xl transition-all flex flex-col border border-slate-200/80 animate-in zoom-in-95 duration-200">
-              
+
               {/* Header */}
               <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-200/80">
                 <div className="flex items-center gap-3">
@@ -753,7 +888,7 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
 
               {/* Body: Circular Interactive Crop Area */}
               <div className="px-6 py-5 text-center space-y-4">
-                
+
                 {/* Viewport Box */}
                 <div
                   className="relative mx-auto w-[220px] h-[220px] rounded-full overflow-hidden border-4 border-emerald-500 shadow-xl bg-slate-950 cursor-grab active:cursor-grabbing select-none"

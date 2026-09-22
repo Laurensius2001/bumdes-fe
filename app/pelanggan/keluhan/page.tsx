@@ -5,8 +5,25 @@ import IconifyIcon from '@/components/common/IconifyIcon';
 import { toast } from '@/components/Toast';
 import { pelangganService } from '@/services/pelangganService';
 import { keluhanService } from '@/services/keluhanService';
+import { authService } from '@/services/authService';
 import FormModal, { FormField } from '@/components/FormModal';
 import dayjs from 'dayjs';
+
+const formatWaUrl = (phone: string, text?: string) => {
+  const cleaned = (phone || '').replace(/\D/g, '').replace(/^0/, '62');
+  return text
+    ? `https://wa.me/${cleaned}?text=${encodeURIComponent(text)}`
+    : `https://wa.me/${cleaned}`;
+};
+
+const formatDisplayPhone = (phone: string) => {
+  if (!phone) return '-';
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length >= 10 && cleaned.length <= 13) {
+    return `${cleaned.slice(0, 4)}-${cleaned.slice(4, 8)}-${cleaned.slice(8)}`;
+  }
+  return phone;
+};
 
 interface PaketData {
   id: number;
@@ -32,6 +49,7 @@ interface PelangganData {
 interface Keluhan {
   id: number;
   kode_keluhan: string;
+  pelanggan_id?: number;
   kategori: string;
   judul: string;
   deskripsi: string;
@@ -39,6 +57,11 @@ interface Keluhan {
   catatan_admin: string | null;
   created_at: string;
   updated_at: string;
+  pelanggan?: {
+    id: number;
+    kode_pelanggan?: string;
+    nama?: string;
+  };
 }
 
 const keluhanFields: FormField[] = [
@@ -75,6 +98,10 @@ export default function PelangganKeluhanLandingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [pelangganData, setPelangganData] = useState<PelangganData | null>(null);
   const [keluhanData, setKeluhanData] = useState<Keluhan[]>([]);
+  const [adminContact, setAdminContact] = useState<{ no_wa: string; admin_name: string }>({
+    no_wa: '082319058505',
+    admin_name: 'Admin BUMDes',
+  });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,19 +110,37 @@ export default function PelangganKeluhanLandingPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [pelangganRes, keluhanRes] = await Promise.all([
-        pelangganService.getMe(),
-        keluhanService.getAll()
-      ]);
+      // 1. Fetch Contact Admin Dinamis
+      try {
+        const contactRes = await authService.getAdminContact();
+        if (contactRes.ok && contactRes.data?.data) {
+          setAdminContact(contactRes.data.data);
+        }
+      } catch (errContact) {
+        console.error('Error fetching admin contact:', errContact);
+      }
+
+      const pelangganRes = await pelangganService.getMe();
+      let currentPelanggan: PelangganData | null = null;
 
       if (pelangganRes.ok && pelangganRes.data?.success) {
-        setPelangganData(pelangganRes.data.data);
+        currentPelanggan = pelangganRes.data.data;
+        setPelangganData(currentPelanggan);
       } else {
         toast.error('Gagal mengambil data pelanggan');
       }
 
+      const keluhanRes = await keluhanService.getAll(
+        currentPelanggan?.id ? { pelanggan_id: currentPelanggan.id } : undefined
+      );
+
       if (keluhanRes.ok && keluhanRes.data?.success) {
-        setKeluhanData(keluhanRes.data.data);
+        const allKeluhan = keluhanRes.data.data || [];
+        // Pastikan hanya menampilkan keluhan milik pelanggan yang sedang login
+        const myKeluhan = currentPelanggan?.id
+          ? allKeluhan.filter((k: any) => k.pelanggan_id === currentPelanggan.id || k.pelanggan?.id === currentPelanggan.id)
+          : allKeluhan;
+        setKeluhanData(myKeluhan);
       } else {
         toast.error('Gagal mengambil data keluhan');
       }
@@ -114,11 +159,18 @@ export default function PelangganKeluhanLandingPage() {
   const handleFormSubmit = async (formData: Record<string, any>) => {
     setIsSubmitting(true);
     try {
-      const storedUser = localStorage.getItem('bumdes_user');
-      let pelanggan_id = 0;
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        pelanggan_id = user.pelanggan?.id || user.id;
+      const storedUser = typeof window !== 'undefined' ? localStorage.getItem('bumdes_user') : null;
+      let pelanggan_id = pelangganData?.id || 0;
+      if (!pelanggan_id && storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          pelanggan_id = user.pelanggan?.id || user.id;
+        } catch (e) {}
+      }
+
+      if (!pelanggan_id) {
+        toast.error('Gagal mendeteksi identitas pelanggan. Silakan refresh halaman.');
+        return;
       }
 
       const payload = {
@@ -294,13 +346,13 @@ export default function PelangganKeluhanLandingPage() {
           </div>
 
           <a
-            href="https://wa.me/6282319058505"
+            href={formatWaUrl(adminContact.no_wa, 'Halo Layanan Pelanggan BTS SODONG NET, saya ingin menanyakan bantuan pengaduan')}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full py-2.5 px-4 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all flex items-center justify-center space-x-2"
           >
             <IconifyIcon icon="lucide:message-circle" className="text-sm text-emerald-500" />
-            <span>Pengaduan WA: 0823-1905-8505</span>
+            <span>Pengaduan WA: {formatDisplayPhone(adminContact.no_wa)}</span>
           </a>
         </div>
 

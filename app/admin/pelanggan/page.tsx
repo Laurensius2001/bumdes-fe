@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import DataTable, { Column } from '@/components/DataTable';
 import FormModal from '@/components/FormModal';
+import ConfirmModal from '@/components/ConfirmModal';
 import IconifyIcon from '@/components/common/IconifyIcon';
 import { toast } from '@/components/Toast';
 import { Tooltip } from '@mui/material';
@@ -78,6 +79,11 @@ export default function AdminPelangganPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Delete State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteData, setDeleteData] = useState<Pelanggan | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Avatar Preview Modal State
   const [previewAvatar, setPreviewAvatar] = useState<{ url: string; name: string } | null>(null);
@@ -266,6 +272,34 @@ export default function AdminPelangganPage() {
     }
   };
 
+  // ─── Delete Handler ─────────────────────────────────────
+  const openDeleteModal = (row: Pelanggan) => {
+    setDeleteData(row);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeletePelanggan = async () => {
+    if (!deleteData) return;
+    setIsDeleting(true);
+    try {
+      const res = await pelangganService.delete(deleteData.db_id);
+
+      if (res.ok) {
+        toast.success(`Data pelanggan ${deleteData.name} beserta akun user berhasil dihapus!`, 'Berhasil');
+        setIsDeleteModalOpen(false);
+        setDeleteData(null);
+        await fetchData(); // Refresh table data
+      } else {
+        toast.error(res.data?.message || 'Gagal menghapus data pelanggan', 'Oops!');
+      }
+    } catch (err) {
+      console.error('Error saat menghapus pelanggan:', err);
+      toast.error('Terjadi kesalahan pada server. Silakan coba lagi.', 'Error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // ─── Table Columns ───────────────────────────────────────
   const columns: Column<Pelanggan>[] = [
     {
@@ -375,6 +409,14 @@ export default function AdminPelangganPage() {
               className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all duration-200 shadow-xs flex items-center justify-center group"
             >
               <IconifyIcon icon="lucide:square-pen" className="text-sm transition-transform group-hover:scale-110" />
+            </button>
+          </Tooltip>
+          <Tooltip title="Hapus Pelanggan" placement="top">
+            <button
+              onClick={() => openDeleteModal(row)}
+              className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 border border-rose-200/80 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-200 shadow-xs flex items-center justify-center group"
+            >
+              <IconifyIcon icon="lucide:trash-2" className="text-sm transition-transform group-hover:scale-110" />
             </button>
           </Tooltip>
         </div>
@@ -544,19 +586,44 @@ export default function AdminPelangganPage() {
         submitText={isEditing ? 'Menyimpan...' : 'Simpan'}
       />
 
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          if (!isDeleting) {
+            setIsDeleteModalOpen(false);
+            setDeleteData(null);
+          }
+        }}
+        onConfirm={handleDeletePelanggan}
+        title="Hapus Data Pelanggan?"
+        message={
+          <span>
+            Apakah Anda yakin ingin menghapus pelanggan <strong className="text-gray-800 font-semibold">{deleteData?.name}</strong> ({deleteData?.id})?
+            <br />
+            <span className="text-rose-500 text-xs block mt-1">
+              Akun user dan riwayat terkait pelanggan ini akan otomatis terhapus secara permanen.
+            </span>
+          </span>
+        }
+        confirmText={isDeleting ? 'Menghapus...' : 'Hapus Pelanggan'}
+        cancelText="Batal"
+        type="danger"
+        isLoading={isDeleting}
+      />
+
       {/* ─── AVATAR PREVIEW MODAL ───────────────────────────────────── */}
       {previewAvatar && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[9999] overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
             {/* Backdrop */}
-            <div 
+            <div
               className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
               onClick={() => setPreviewAvatar(null)}
             />
 
             {/* Modal Box */}
             <div className="relative w-full max-w-sm transform rounded-3xl bg-white shadow-2xl transition-all flex flex-col border border-slate-200/80 animate-in zoom-in-95 duration-200">
-              
+
               {/* Header */}
               <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-200/80">
                 <div className="flex items-center gap-3">

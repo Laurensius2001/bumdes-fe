@@ -9,6 +9,7 @@ export interface User {
   username: string;
   role: 'admin' | 'pelanggan' | string;
   foto_profil?: string | null;
+  no_hp?: string | null;
   isActive?: boolean;
   is_active?: boolean;
   isPasswordChanged?: boolean;

@@ -192,9 +192,6 @@ const LoginPage = () => {
 
               {/* Header Form */}
               <div>
-                <span className="px-2.5 py-1 text-[11px] font-semibold tracking-wider uppercase rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  Portal Login Administrator
-                </span>
                 <h3 className="text-2xl font-bold text-white tracking-tight mt-3">Selamat Datang Kembali</h3>
                 <p className="text-xs text-slate-400 mt-1">
                   Masukkan kredensial akun Anda untuk mengelola dashboard BTS Sodong Net.

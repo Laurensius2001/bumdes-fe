@@ -161,7 +161,7 @@ const Topbar = ({ handleDrawerToggle, isCollapsed }: TopbarProps): ReactElement 
           height: '64px',
         }}
       >
-        <div className="flex items-center gap-3 flex-1">
+        <div className="flex items-center gap-3">
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -173,19 +173,6 @@ const Topbar = ({ handleDrawerToggle, isCollapsed }: TopbarProps): ReactElement 
           >
             <IconifyIcon icon="mdi:menu" />
           </IconButton>
-
-          {/* Global Search Input matching mockup */}
-          <div className="relative w-52 sm:w-80 md:w-96">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-              <IconifyIcon icon="lucide:search" className="text-xs text-slate-400" />
-            </span>
-            <input
-              type="text"
-              id="globalSearch"
-              placeholder="Cari pelanggan, ID keluhan, No HP..."
-              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-800 placeholder-slate-400 transition-all outline-none"
-            />
-          </div>
         </div>
 
         {/* Right Actions matching mockup */}

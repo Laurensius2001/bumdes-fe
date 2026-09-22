@@ -6,6 +6,23 @@ import { useRouter } from 'next/navigation';
 import IconifyIcon from '@/components/common/IconifyIcon';
 import { keluhanService } from '@/services/keluhanService';
 import { pelangganService } from '@/services/pelangganService';
+import { authService } from '@/services/authService';
+
+const formatWaUrl = (phone: string, text?: string) => {
+  const cleaned = (phone || '').replace(/\D/g, '').replace(/^0/, '62');
+  return text
+    ? `https://wa.me/${cleaned}?text=${encodeURIComponent(text)}`
+    : `https://wa.me/${cleaned}`;
+};
+
+const formatDisplayPhone = (phone: string) => {
+  if (!phone) return '-';
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length >= 10 && cleaned.length <= 13) {
+    return `${cleaned.slice(0, 4)}-${cleaned.slice(4, 8)}-${cleaned.slice(8)}`;
+  }
+  return phone;
+};
 
 interface PaketData {
   id: number;
@@ -33,6 +50,7 @@ interface PelangganData {
 interface Keluhan {
   id: number;
   kode_keluhan: string;
+  pelanggan_id?: number;
   kategori: string;
   judul: string;
   deskripsi: string;
@@ -40,6 +58,11 @@ interface Keluhan {
   catatan_admin: string | null;
   created_at: string;
   updated_at: string;
+  pelanggan?: {
+    id: number;
+    kode_pelanggan?: string;
+    nama?: string;
+  };
 }
 
 export default function PelangganDashboardPage() {
@@ -47,23 +70,43 @@ export default function PelangganDashboardPage() {
   
   const [pelanggan, setPelanggan] = useState<PelangganData | null>(null);
   const [keluhanList, setKeluhanList] = useState<Keluhan[]>([]);
+  const [adminContact, setAdminContact] = useState<{ no_wa: string; admin_name: string }>({
+    no_wa: '082319058505',
+    admin_name: 'Admin BUMDes',
+  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // ─── Fetch Pelanggan Me & Keluhan ─────────────────────────────
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [resMe, resKeluhan] = await Promise.all([
-        pelangganService.getMe(),
-        keluhanService.getAll(),
-      ]);
+      // 1. Fetch Contact Info Dinamis
+      try {
+        const resContact = await authService.getAdminContact();
+        if (resContact.ok && resContact.data?.data) {
+          setAdminContact(resContact.data.data);
+        }
+      } catch (errContact) {
+        console.error('Error fetching admin contact:', errContact);
+      }
+      const resMe = await pelangganService.getMe();
+      let currentPelanggan: PelangganData | null = null;
 
       if (resMe.ok && resMe.data?.data) {
-        setPelanggan(resMe.data.data);
+        currentPelanggan = resMe.data.data;
+        setPelanggan(currentPelanggan);
       }
 
+      const resKeluhan = await keluhanService.getAll(
+        currentPelanggan?.id ? { pelanggan_id: currentPelanggan.id } : undefined
+      );
+
       if (resKeluhan.ok && resKeluhan.data?.data && Array.isArray(resKeluhan.data.data)) {
-        setKeluhanList(resKeluhan.data.data);
+        // Filter khusus keluhan milik pelanggan yang sedang login
+        const myKeluhan = currentPelanggan?.id
+          ? resKeluhan.data.data.filter((k: any) => k.pelanggan_id === currentPelanggan.id || k.pelanggan?.id === currentPelanggan.id)
+          : resKeluhan.data.data;
+        setKeluhanList(myKeluhan);
       }
     } catch (err) {
       console.error('Error loading pelanggan dashboard data:', err);
@@ -130,13 +173,13 @@ export default function PelangganDashboardPage() {
               <span>Laporkan Gangguan ({activeKeluhanCount} Aktif)</span>
             </Link>
             <a
-              href="https://wa.me/6282319058505?text=Halo%20Admin%20BTS%20SODONG%20NET,%20saya%20ingin%20mengajukan%20pengaduan%20layanan%20internet"
+              href={formatWaUrl(adminContact.no_wa, 'Halo Admin BTS SODONG NET, saya ingin mengajukan pengaduan layanan internet')}
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2.5 text-xs sm:text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 rounded-xl transition-all flex items-center space-x-2"
             >
               <IconifyIcon icon="lucide:message-circle" className="text-sm text-emerald-400" />
-              <span>Pengaduan WA (0823-1905-8505)</span>
+              <span>Pengaduan WA ({formatDisplayPhone(adminContact.no_wa)})</span>
             </a>
           </div>
         </div>
@@ -437,22 +480,22 @@ export default function PelangganDashboardPage() {
         </div>
         <div className="flex items-center space-x-2.5 w-full sm:w-auto shrink-0">
           <a
-            href="https://wa.me/6282319058505"
+            href={formatWaUrl(adminContact.no_wa, 'Halo Layanan Teknis BTS SODONG NET, saya butuh bantuan kendala internet')}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all flex items-center justify-center space-x-2 shadow-xs"
           >
             <IconifyIcon icon="lucide:phone" className="text-xs" />
-            <span>Pengaduan: 0823-1905-8505</span>
+            <span>Pengaduan: {formatDisplayPhone(adminContact.no_wa)}</span>
           </a>
           <a
-            href="https://wa.me/6282319059592"
+            href={formatWaUrl(adminContact.no_wa, 'Halo Admin BTS SODONG NET, saya ingin menanyakan informasi layanan')}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 rounded-xl transition-all flex items-center justify-center space-x-2"
           >
             <IconifyIcon icon="lucide:message-circle" className="text-xs" />
-            <span>Admin: 0823-1905-9592</span>
+            <span>Admin: {formatDisplayPhone(adminContact.no_wa)}</span>
           </a>
         </div>
       </div>

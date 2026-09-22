@@ -34,4 +34,18 @@ export const authService = {
       withAuth: true,
     });
   },
+
+  updateProfile: async (payload: { no_hp?: string; [key: string]: any }) => {
+    return await apiFetch('/auth/profile', {
+      method: 'PUT',
+      body: payload,
+      withAuth: true,
+    });
+  },
+
+  getAdminContact: async () => {
+    return await apiFetch('/auth/contact', {
+      method: 'GET',
+    });
+  },
 };

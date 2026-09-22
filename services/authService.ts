@@ -48,4 +48,24 @@ export const authService = {
       method: 'GET',
     });
   },
+
+  verifyPhoneForReset: async (no_hp: string) => {
+    return await apiFetch('/auth/forgot-password/verify-phone', {
+      method: 'POST',
+      body: { no_hp },
+    });
+  },
+
+  resetPasswordWithPhone: async (payload: {
+    reset_token?: string;
+    phone?: string;
+    new_password: string;
+    confirm_password: string;
+  }) => {
+    return await apiFetch('/auth/forgot-password/reset', {
+      method: 'POST',
+      body: payload,
+    });
+  },
 };
+

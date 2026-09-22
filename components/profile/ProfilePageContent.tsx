@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useRef, useEffect, ChangeEvent, FormEvent, MouseEvent, TouchEvent, WheelEvent } from 'react';
+import React, { useState, useRef, useEffect, useCallback, ChangeEvent, FormEvent, MouseEvent, TouchEvent, WheelEvent } from 'react';
 import { createPortal } from 'react-dom';
 import IconifyIcon from '@/components/common/IconifyIcon';
 import { useAuth } from '@/context/AuthContext';
 import { authService } from '@/services/authService';
 import { pelangganService } from '@/services/pelangganService';
+import { whatsappService, WhatsAppStatusData } from '@/services/whatsappService';
 import { getApiAssetUrl } from '@/services/api';
 import { toast } from '@/components/Toast';
 import dayjs from 'dayjs';
@@ -56,10 +57,21 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
   const [adminNoHp, setAdminNoHp] = useState(user?.no_hp || '');
   const [isUpdatingWa, setIsUpdatingWa] = useState(false);
 
-  // Sync adminNoHp when user changes
+  // WhatsApp Gateway State (Admin only)
+  const [waStatus, setWaStatus] = useState<WhatsAppStatusData | null>(null);
+  const [isLoadingWaStatus, setIsLoadingWaStatus] = useState(false);
+  const [showWaModal, setShowWaModal] = useState(false);
+  const [waModalTab, setWaModalTab] = useState<'qr' | 'pairing'>('qr');
+  const [pairingPhone, setPairingPhone] = useState(user?.no_hp || '');
+  const [pairingCode, setPairingCode] = useState<string | null>(null);
+  const [isLoadingPairing, setIsLoadingPairing] = useState(false);
+  const [isDisconnectingWa, setIsDisconnectingWa] = useState(false);
+
+  // Sync adminNoHp and pairingPhone when user changes
   useEffect(() => {
     if (user?.no_hp !== undefined && user?.no_hp !== null) {
       setAdminNoHp(user.no_hp);
+      setPairingPhone(user.no_hp);
     }
   }, [user?.no_hp]);
 
@@ -356,6 +368,97 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
       toast.error(err?.message || 'Terjadi kesalahan koneksi server.', 'Gagal');
     } finally {
       setIsUpdatingWa(false);
+    }
+  };
+
+  // ─── WHATSAPP GATEWAY HANDLERS ──────────────────────────────────
+  const fetchWaStatus = useCallback(async () => {
+    try {
+      setIsLoadingWaStatus(true);
+      const res = await whatsappService.getStatus();
+      if (res.ok && res.data?.data) {
+        setWaStatus(res.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching WA status:', err);
+    } finally {
+      setIsLoadingWaStatus(false);
+    }
+  }, []);
+
+  // Fetch WA status on mount for admin
+  useEffect(() => {
+    if (role === 'admin') {
+      fetchWaStatus();
+    }
+  }, [role, fetchWaStatus]);
+
+  // Polling WA status when modal is open and not authenticated yet
+  useEffect(() => {
+    if (!showWaModal || waStatus?.status === 'AUTHENTICATED') return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await whatsappService.getStatus();
+        if (res.ok && res.data?.data) {
+          setWaStatus(res.data.data);
+          if (res.data.data.status === 'AUTHENTICATED') {
+            toast.success('WhatsApp berhasil terhubung!');
+          }
+        }
+      } catch (err) {
+        console.error('Polling WA error:', err);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [showWaModal, waStatus?.status]);
+
+  // Request Pairing Code
+  const handleRequestPairingCode = async (e?: FormEvent) => {
+    if (e) e.preventDefault();
+    const phoneToUse = pairingPhone || adminNoHp;
+    if (!phoneToUse) {
+      toast.error('Nomor WhatsApp admin wajib diisi.', 'Form Belum Lengkap');
+      return;
+    }
+
+    setIsLoadingPairing(true);
+    try {
+      const res = await whatsappService.requestPairingCode(phoneToUse);
+      if (res.ok && res.data?.success) {
+        setPairingCode(res.data.data.code);
+        toast.success('Kode pairing berhasil dibuat! Masukkan kode pada aplikasi WhatsApp di ponsel Anda.');
+      } else {
+        toast.error(res.data?.message || 'Gagal membuat kode pairing WhatsApp.', 'Gagal');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan saat meminta kode pairing.', 'Gagal');
+    } finally {
+      setIsLoadingPairing(false);
+    }
+  };
+
+  // Disconnect WhatsApp Session
+  const handleDisconnectWa = async () => {
+    if (!confirm('Apakah Anda yakin ingin memutuskan sesi WhatsApp ini? Anda harus scan QR atau meminta pairing code ulang untuk menghubungkannya kembali.')) {
+      return;
+    }
+
+    setIsDisconnectingWa(true);
+    try {
+      const res = await whatsappService.disconnect();
+      if (res.ok && res.data?.success) {
+        toast.success('Sesi WhatsApp berhasil diputuskan.');
+        setPairingCode(null);
+        await fetchWaStatus();
+      } else {
+        toast.error(res.data?.message || 'Gagal memutuskan sesi WhatsApp.', 'Gagal');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan server.', 'Gagal');
+    } finally {
+      setIsDisconnectingWa(false);
     }
   };
 
@@ -737,6 +840,88 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
             </div>
           )}
 
+          {/* WhatsApp Gateway Integration Card (Khusus Admin) */}
+          {role === 'admin' && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+                    <IconifyIcon icon="lucide:qr-code" className="text-base" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Koneksi WhatsApp Gateway</h3>
+                    <p className="text-[11px] text-slate-500">Notifikasi otomatis keluhan ke nomor pelanggan.</p>
+                  </div>
+                </div>
+                <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md border flex items-center gap-1.5 ${
+                  waStatus?.status === 'AUTHENTICATED'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : waStatus?.status === 'QR_READY'
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : 'bg-slate-50 text-slate-600 border-slate-200'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    waStatus?.status === 'AUTHENTICATED'
+                      ? 'bg-emerald-500 animate-pulse'
+                      : waStatus?.status === 'QR_READY'
+                      ? 'bg-amber-500'
+                      : 'bg-slate-400'
+                  }`} />
+                  {waStatus?.status === 'AUTHENTICATED'
+                    ? 'Terhubung'
+                    : waStatus?.status === 'QR_READY'
+                    ? 'Perlu Tautan'
+                    : 'Memuat...'}
+                </span>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <p className="text-slate-600 leading-relaxed text-[11px]">
+                  {waStatus?.status === 'AUTHENTICATED'
+                    ? `Sistem saat ini terhubung dengan nomor WhatsApp Gateway (${waStatus.connected_phone || adminNoHp}). Setiap perubahan status keluhan pelanggan otomatis dikirimkan dari nomor ini.`
+                    : 'Tautkan akun WhatsApp admin menggunakan Scan QR Code di layar atau Kode Pairing 8-digit tanpa kamera agar notifikasi keluhan dapat terkirim otomatis.'}
+                </p>
+
+                {waStatus?.status === 'AUTHENTICATED' ? (
+                  <div className="pt-1 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleDisconnectWa}
+                      disabled={isDisconnectingWa}
+                      className="flex-1 py-2 px-3 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <IconifyIcon icon="lucide:log-out" className="text-sm" />
+                      <span>{isDisconnectingWa ? 'Memutuskan...' : 'Putuskan / Ganti Akun'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        fetchWaStatus();
+                        toast.success('Status koneksi WhatsApp diperbarui');
+                      }}
+                      className="p-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl transition-all cursor-pointer"
+                      title="Periksa Ulang Status"
+                    >
+                      <IconifyIcon icon="lucide:refresh-cw" className="text-sm" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowWaModal(true);
+                      fetchWaStatus();
+                    }}
+                    className="w-full py-2.5 px-4 text-xs font-semibold bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <IconifyIcon icon="lucide:link-2" className="text-base text-emerald-400" />
+                    <span>Tautkan WhatsApp (Scan QR / Pairing)</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center space-x-3 border-b border-slate-100 pb-3">
               <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
@@ -1009,6 +1194,225 @@ export default function ProfilePageContent({ role }: ProfilePageContentProps) {
                 </button>
               </div>
 
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ─── WHATSAPP GATEWAY CONNECTION MODAL ───────────────────────── */}
+      {showWaModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="px-6 py-5 bg-gradient-to-r from-slate-900 to-emerald-950 text-white flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                  <IconifyIcon icon="lucide:message-circle" className="text-xl" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Hubungkan WhatsApp</h3>
+                  <p className="text-xs text-slate-300">Gateway notifikasi otomatis BUMDes</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowWaModal(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+              >
+                <IconifyIcon icon="lucide:x" className="text-lg" />
+              </button>
+            </div>
+
+            {/* If already authenticated, show success view */}
+            {waStatus?.status === 'AUTHENTICATED' ? (
+              <div className="p-8 text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border-4 border-emerald-100 animate-in zoom-in-75">
+                  <IconifyIcon icon="lucide:check-circle-2" className="text-3xl" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-lg font-bold text-slate-900">WhatsApp Berhasil Terhubung!</h4>
+                  <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                    Akun WhatsApp Anda (<span className="font-mono font-semibold text-emerald-600">{waStatus.connected_phone || adminNoHp}</span>) telah terhubung sebagai pengirim pesan gateway sistem.
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowWaModal(false)}
+                    className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                  >
+                    Selesai
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 space-y-5">
+                {/* Tab Selector */}
+                <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setWaModalTab('qr')}
+                    className={`py-2 px-3 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      waModalTab === 'qr'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <IconifyIcon icon="lucide:qr-code" className="text-sm" />
+                    <span>Scan Kode QR</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWaModalTab('pairing')}
+                    className={`py-2 px-3 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      waModalTab === 'pairing'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <IconifyIcon icon="lucide:key" className="text-sm" />
+                    <span>Kode Pairing</span>
+                  </button>
+                </div>
+
+                {/* TAB 1: SCAN QR */}
+                {waModalTab === 'qr' && (
+                  <div className="space-y-4 text-center">
+                    <div className="flex items-center justify-center min-h-[220px]">
+                      {waStatus?.qr_image ? (
+                        <div className="relative p-3 bg-white border border-slate-200 rounded-2xl shadow-sm inline-block animate-in zoom-in-95">
+                          <img
+                            src={waStatus.qr_image}
+                            alt="WhatsApp QR Code"
+                            className="w-52 h-52 object-contain rounded-xl"
+                          />
+                          <div className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-emerald-600 font-medium">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span>Menunggu scan dari HP...</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center space-y-2 text-slate-400 py-10">
+                          <IconifyIcon icon="lucide:loader-2" className="text-3xl animate-spin text-emerald-600" />
+                          <p className="text-xs">Menyiapkan kode QR WhatsApp...</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Instructions */}
+                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 text-left space-y-1.5 text-[11px] text-slate-600">
+                      <p className="font-semibold text-slate-800">Petunjuk Scan:</p>
+                      <ol className="list-decimal list-inside space-y-1 text-slate-600">
+                        <li>Buka aplikasi <b>WhatsApp</b> di ponsel Anda.</li>
+                        <li>Ketuk ikon titik tiga (Android) atau <b>Pengaturan</b> (iOS).</li>
+                        <li>Pilih <b>Perangkat Tertaut</b> &gt; <b>Tautkan Perangkat</b>.</li>
+                        <li>Arahkan kamera HP Anda ke kode QR di atas.</li>
+                      </ol>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => fetchWaStatus()}
+                      disabled={isLoadingWaStatus}
+                      className="w-full py-2 px-3 text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <IconifyIcon icon="lucide:refresh-cw" className={`text-xs ${isLoadingWaStatus ? 'animate-spin' : ''}`} />
+                      <span>Perbarui Kode QR</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* TAB 2: PAIRING CODE */}
+                {waModalTab === 'pairing' && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-slate-700">Nomor WhatsApp Admin</label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <IconifyIcon icon="lucide:phone" className="text-sm" />
+                          </div>
+                          <input
+                            type="text"
+                            value={pairingPhone}
+                            onChange={(e) => setPairingPhone(e.target.value)}
+                            placeholder="Contoh: 082319058505"
+                            className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-mono"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRequestPairingCode()}
+                          disabled={isLoadingPairing}
+                          className="py-2 px-3.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold text-xs rounded-xl transition-all flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer disabled:opacity-50"
+                        >
+                          {isLoadingPairing ? (
+                            <>
+                              <IconifyIcon icon="lucide:loader-2" className="animate-spin text-sm" />
+                              <span>Meminta...</span>
+                            </>
+                          ) : (
+                            <>
+                              <IconifyIcon icon="lucide:send" className="text-xs" />
+                              <span>Minta Kode</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-slate-400">
+                        Nomor terisi otomatis dari profil admin. Anda dapat menggantinya jika ingin menautkan nomor lain.
+                      </p>
+                    </div>
+
+                    {/* Display Generated Pairing Code */}
+                    {pairingCode && (
+                      <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-3 animate-in zoom-in-95">
+                        <span className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider">
+                          Kode Penautan WhatsApp Anda:
+                        </span>
+                        <div className="py-2.5 px-4 bg-white border border-emerald-300 rounded-xl font-mono text-2xl font-extrabold tracking-widest text-emerald-900 shadow-xs select-all">
+                          {pairingCode}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(pairingCode);
+                            toast.success('Kode pairing berhasil disalin!');
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold cursor-pointer shadow-xs transition-all"
+                        >
+                          <IconifyIcon icon="lucide:copy" className="text-xs" />
+                          <span>Salin Kode</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Pairing Instructions */}
+                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 text-left space-y-1.5 text-[11px] text-slate-600">
+                      <p className="font-semibold text-slate-800">Langkah Memasukkan Kode:</p>
+                      <ol className="list-decimal list-inside space-y-1 text-slate-600">
+                        <li>Buka <b>WhatsApp</b> di HP Anda.</li>
+                        <li>Pilih <b>Perangkat Tertaut</b> &gt; <b>Tautkan Perangkat</b>.</li>
+                        <li>Ketuk tulisan biru <b>"Tautkan dengan nomor telepon saja"</b> di bawah layar.</li>
+                        <li>Masukkan kode penautan 8 digit di atas.</li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+              <span>Koneksi WhatsApp Gateway BUMDes</span>
+              <button
+                type="button"
+                onClick={() => setShowWaModal(false)}
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer"
+              >
+                Tutup
+              </button>
             </div>
           </div>
         </div>,

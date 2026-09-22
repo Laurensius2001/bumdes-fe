@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useState, useTransition, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from '@/components/Toast';
@@ -35,8 +36,100 @@ const LoginPage = () => {
     toast.info('Akun demo terisi!', 'Auto Fill');
   };
 
-  const handleForgotPassword = () => {
-    toast.info('Silakan hubungi Kepala BUMDes untuk reset password', 'Lupa Password');
+  // Forgot Password State
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotStep, setForgotStep] = useState<1 | 2>(1); // 1: Input No HP, 2: Input Password Baru
+  const [forgotPhone, setForgotPhone] = useState('');
+  const [isVerifyingPhone, setIsVerifyingPhone] = useState(false);
+  const [verifiedUser, setVerifiedUser] = useState<{
+    user_id: number;
+    username: string;
+    nama: string;
+    role: string;
+    reset_token: string;
+  } | null>(null);
+
+  const [newPass, setNewPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [isResettingPass, setIsResettingPass] = useState(false);
+
+  const handleOpenForgotModal = () => {
+    setForgotStep(1);
+    setForgotPhone('');
+    setVerifiedUser(null);
+    setNewPass('');
+    setConfirmPass('');
+    setShowForgotModal(true);
+  };
+
+  const handleVerifyPhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotPhone.trim()) {
+      toast.warning('Silakan masukkan nomor HP/WhatsApp yang terdaftar.', 'Nomor Kosong');
+      return;
+    }
+
+    setIsVerifyingPhone(true);
+    try {
+      const res = await authService.verifyPhoneForReset(forgotPhone.trim());
+      if (res.ok && res.data?.success && res.data?.data) {
+        setVerifiedUser(res.data.data);
+        setForgotStep(2);
+        toast.success(`Akun ditemukan: @${res.data.data.username}. Silakan masukkan kata sandi baru.`, 'Terverifikasi');
+      } else {
+        toast.error(res.data?.message || 'Nomor HP tidak ditemukan pada sistem BTS Sodong Net.', 'Verifikasi Gagal');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan koneksi server.', 'Gagal');
+    } finally {
+      setIsVerifyingPhone(false);
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newPass || !confirmPass) {
+      toast.warning('Semua kolom kata sandi baru wajib diisi.', 'Form Belum Lengkap');
+      return;
+    }
+
+    if (newPass.length < 6) {
+      toast.error('Kata sandi baru minimal 6 karakter.', 'Kata Sandi Terlalu Pendek');
+      return;
+    }
+
+    if (newPass !== confirmPass) {
+      toast.error('Konfirmasi kata sandi tidak cocok.', 'Kata Sandi Tidak Cocok');
+      return;
+    }
+
+    setIsResettingPass(true);
+    try {
+      const res = await authService.resetPasswordWithPhone({
+        reset_token: verifiedUser?.reset_token,
+        phone: forgotPhone.trim(),
+        new_password: newPass,
+        confirm_password: confirmPass,
+      });
+
+      if (res.ok && res.data?.success) {
+        toast.success('Kata sandi berhasil diperbarui! Silakan masuk dengan kata sandi baru.', 'Berhasil');
+        if (verifiedUser?.username) {
+          setEmail(verifiedUser.username);
+          setPassword('');
+        }
+        setShowForgotModal(false);
+      } else {
+        toast.error(res.data?.message || 'Gagal memperbarui kata sandi.', 'Gagal');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan koneksi server.', 'Gagal');
+    } finally {
+      setIsResettingPass(false);
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -231,8 +324,8 @@ const LoginPage = () => {
                     </label>
                     <button
                       type="button"
-                      onClick={handleForgotPassword}
-                      className="text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+                      onClick={handleOpenForgotModal}
+                      className="text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors cursor-pointer"
                     >
                       Lupa Password?
                     </button>
@@ -296,6 +389,241 @@ const LoginPage = () => {
         </div>
 
       </div>
+
+      {/* ─── MODAL LUPA PASSWORD (2-STEP WIZARD) ────────────────────── */}
+      {showForgotModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col text-slate-100">
+            {/* Modal Header */}
+            <div className="px-6 py-5 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                  <IconifyIcon icon="lucide:key-round" className="text-xl" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Reset Kata Sandi</h3>
+                  <p className="text-xs text-slate-400">Verifikasi akun via nomor WhatsApp / HP</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+              >
+                <IconifyIcon icon="lucide:x" className="text-base" />
+              </button>
+            </div>
+
+            {/* Step Indicator */}
+            <div className="grid grid-cols-2 text-center text-xs border-b border-slate-800 bg-slate-950/40">
+              <div className={`py-2.5 font-semibold flex items-center justify-center gap-2 border-b-2 transition-all ${
+                forgotStep === 1
+                  ? 'border-emerald-500 text-emerald-400'
+                  : 'border-transparent text-slate-500'
+              }`}>
+                <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-[10px] flex items-center justify-center font-bold">1</span>
+                <span>Validasi Nomor HP</span>
+              </div>
+              <div className={`py-2.5 font-semibold flex items-center justify-center gap-2 border-b-2 transition-all ${
+                forgotStep === 2
+                  ? 'border-emerald-500 text-emerald-400'
+                  : 'border-transparent text-slate-500'
+              }`}>
+                <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-[10px] flex items-center justify-center font-bold">2</span>
+                <span>Kata Sandi Baru</span>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+
+              {/* ─── STEP 1: VALIDASI NOMOR HP ─────────────────────── */}
+              {forgotStep === 1 && (
+                <form onSubmit={handleVerifyPhoneSubmit} className="space-y-4">
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Masukkan nomor WhatsApp atau nomor HP yang terdaftar pada akun Anda (admin maupun pelanggan). Sistem akan memverifikasi identitas akun Anda.
+                  </p>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Nomor HP / WhatsApp Terdaftar
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                        <IconifyIcon icon="lucide:phone" className="text-sm" />
+                      </span>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: 082319058505"
+                        value={forgotPhone}
+                        onChange={(e) => setForgotPhone(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono transition-all"
+                        autoFocus
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-500">Format: 08xxxxxxxxxx atau 628xxxxxxxxxx</span>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotModal(false)}
+                      className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isVerifyingPhone}
+                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {isVerifyingPhone ? (
+                        <>
+                          <IconifyIcon icon="lucide:loader-2" className="animate-spin text-sm" />
+                          <span>Memeriksa...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Periksa Nomor HP</span>
+                          <IconifyIcon icon="lucide:arrow-right" className="text-xs" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* ─── STEP 2: INPUT PASSWORD BARU & KONFIRMASI ──────── */}
+              {forgotStep === 2 && (
+                <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+                  {/* Verified User Identity Chip */}
+                  <div className="p-3 rounded-2xl bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-between text-xs">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                        <IconifyIcon icon="lucide:user-check" className="text-base" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white">@{verifiedUser?.username}</span>
+                          <span className="px-1.5 py-0.2 text-[9px] font-bold rounded uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            {verifiedUser?.role}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400">{verifiedUser?.nama}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setForgotStep(1)}
+                      className="text-[11px] text-slate-400 hover:text-emerald-400 transition-colors cursor-pointer underline"
+                      title="Ganti nomor HP yang diperiksa"
+                    >
+                      Ganti Nomor
+                    </button>
+                  </div>
+
+                  {/* Password Baru Field */}
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Kata Sandi Baru
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                        <IconifyIcon icon="lucide:lock" className="text-sm" />
+                      </span>
+                      <input
+                        type={showNewPass ? 'text' : 'password'}
+                        required
+                        placeholder="Minimal 6 karakter"
+                        value={newPass}
+                        onChange={(e) => setNewPass(e.target.value)}
+                        className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPass(!showNewPass)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 cursor-pointer"
+                      >
+                        <IconifyIcon icon={showNewPass ? 'lucide:eye-off' : 'lucide:eye'} className="text-sm" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Konfirmasi Password Baru Field */}
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Ulangi Kata Sandi Baru
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                        <IconifyIcon icon="lucide:lock" className="text-sm" />
+                      </span>
+                      <input
+                        type={showConfirmPass ? 'text' : 'password'}
+                        required
+                        placeholder="Ketik ulang kata sandi baru"
+                        value={confirmPass}
+                        onChange={(e) => setConfirmPass(e.target.value)}
+                        className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPass(!showConfirmPass)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 cursor-pointer"
+                      >
+                        <IconifyIcon icon={showConfirmPass ? 'lucide:eye-off' : 'lucide:eye'} className="text-sm" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setForgotStep(1)}
+                      className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      Kembali
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isResettingPass}
+                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {isResettingPass ? (
+                        <>
+                          <IconifyIcon icon="lucide:loader-2" className="animate-spin text-sm" />
+                          <span>Menyimpan...</span>
+                        </>
+                      ) : (
+                        <>
+                          <IconifyIcon icon="lucide:check" className="text-xs" />
+                          <span>Simpan Kata Sandi Baru</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3 bg-slate-950/60 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+              <span>Keamanan Akun BTS SODONG NET</span>
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="text-xs font-medium text-slate-400 hover:text-white cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
     </div>
   );

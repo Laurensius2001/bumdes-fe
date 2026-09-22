@@ -24,9 +24,6 @@ export default function DetailKeluhan({ keluhan, onBack, onUpdateSuccess }: Deta
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(false);
 
-  // State WhatsApp
-  const [waStatus, setWaStatus] = useState<string | null>(null);
-  const [waQr, setWaQr] = useState<string | null>(null);
 
   const statusOptions = [
     { label: 'Menunggu (Laporan Diterima)', value: 'MENUNGGU' },
@@ -105,18 +102,6 @@ export default function DetailKeluhan({ keluhan, onBack, onUpdateSuccess }: Deta
 
         if (onUpdateSuccess) {
           onUpdateSuccess();
-        }
-
-        const waRes = await fetch('http://localhost:3000/api/whatsapp/status');
-        const waData = await waRes.json();
-
-        if (waData.success && waData.data) {
-          setWaStatus(waData.data.status);
-          setWaQr(waData.data.qr);
-
-          if (waData.data.status === 'QR_READY') {
-            toast.info('📱 Scan QR Code WhatsApp di bawah untuk mengaktifkan notifikasi.');
-          }
         }
       } else {
         toast.error(response.data?.message || 'Gagal memperbarui keluhan');
@@ -483,8 +468,8 @@ export default function DetailKeluhan({ keluhan, onBack, onUpdateSuccess }: Deta
                   type="button"
                   onClick={() => setOpenDropdown(!openDropdown)}
                   className={`w-full flex items-center justify-between rounded-xl border bg-white px-4 py-2.5 outline-none transition-all text-left text-xs font-semibold text-slate-800 ${openDropdown
-                      ? 'border-emerald-500 ring-2 ring-emerald-100'
-                      : 'border-slate-200 hover:border-slate-300'
+                    ? 'border-emerald-500 ring-2 ring-emerald-100'
+                    : 'border-slate-200 hover:border-slate-300'
                     }`}
                 >
                   <span>
@@ -507,8 +492,8 @@ export default function DetailKeluhan({ keluhan, onBack, onUpdateSuccess }: Deta
                           setOpenDropdown(false);
                         }}
                         className={`w-full rounded-lg px-3 py-2 text-left text-xs font-semibold transition-colors ${formStatus === opt.value
-                            ? 'bg-emerald-600 text-white'
-                            : 'text-slate-700 hover:bg-slate-50'
+                          ? 'bg-emerald-600 text-white'
+                          : 'text-slate-700 hover:bg-slate-50'
                           }`}
                       >
                         {opt.label}
@@ -578,49 +563,7 @@ export default function DetailKeluhan({ keluhan, onBack, onUpdateSuccess }: Deta
         </div>
       </div>
 
-      {/* WHATSAPP QR SCANNER */}
-      {waStatus === 'QR_READY' && waQr && (
-        <div className="bg-white rounded-2xl border border-emerald-200 shadow-xs p-6 mt-2 space-y-4 relative overflow-hidden flex flex-col items-center justify-center text-center">
-          <div className="absolute top-0 inset-x-0 h-1 bg-emerald-600"></div>
-          <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
-            <IconifyIcon icon="lucide:message-circle" className="text-2xl" />
-          </div>
-          <div>
-            <h3 className="font-bold text-slate-900 text-sm">WhatsApp Perlu Ditautkan</h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-md">Scan QR code di bawah ini menggunakan aplikasi WhatsApp di HP Anda untuk mengaktifkan notifikasi otomatis ke pelanggan.</p>
-          </div>
-          <div className="p-4 bg-white border-2 border-dashed border-slate-200 rounded-xl">
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(waQr)}`}
-              alt="WhatsApp QR Code"
-              className="w-48 h-48 object-contain"
-            />
-          </div>
-          <button
-            onClick={async () => {
-              try {
-                const res = await fetch('http://localhost:3000/api/whatsapp/status');
-                const data = await res.json();
-                if (data.success && data.data) {
-                  setWaStatus(data.data.status);
-                  setWaQr(data.data.qr);
-                  if (data.data.status === 'AUTHENTICATED') {
-                    toast.success('✅ WhatsApp berhasil terhubung! Notifikasi akan terkirim otomatis.');
-                    setWaQr(null);
-                  } else {
-                    toast.error('WhatsApp belum terhubung. Coba scan ulang QR code di atas.');
-                  }
-                }
-              } catch {
-                toast.error('Gagal memeriksa status WhatsApp.');
-              }
-            }}
-            className="text-xs font-semibold text-emerald-600 hover:underline px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100 transition-colors"
-          >
-            Sudah scan? Klik di sini untuk cek status
-          </button>
-        </div>
-      )}
+
 
     </div>
   );
